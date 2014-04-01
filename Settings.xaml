@@ -1,0 +1,52 @@
+﻿<Window x:Class="PS3RemoteManager.Settings"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="PS3 Remote Manager" Height="675" Width="995" MinHeight="675">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="145px"></ColumnDefinition>
+            <ColumnDefinition Width="1*"></ColumnDefinition>
+        </Grid.ColumnDefinitions>
+        <Image Grid.Column="0" VerticalAlignment="Center" Source="Resources\ps3_new.jpg" HorizontalAlignment="Center" />
+        <TabControl Name="SettingsTabs" Grid.Column="1" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
+            <TabItem Header="Remote Configuration" Name="TabRemote">
+                <Grid Background="#FFE5E5E5"/>
+            </TabItem>
+            <TabItem Header="Application Settings" Name="TabApp">
+                <Grid Background="#FFE5E5E5">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="1*"></ColumnDefinition>
+                        <ColumnDefinition Width="1*"></ColumnDefinition>
+                        <ColumnDefinition Width="1*"></ColumnDefinition>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="1*"></RowDefinition>
+                        <RowDefinition Height="1*"></RowDefinition>
+                        <RowDefinition Height="1*"></RowDefinition>
+                        <RowDefinition Height="1*"></RowDefinition>
+                        <RowDefinition Height="1*"></RowDefinition>
+                        <RowDefinition Height="1*"></RowDefinition>
+                        <RowDefinition Height="1*"></RowDefinition>
+                        <RowDefinition Height="1*"></RowDefinition>
+                        <RowDefinition Height="1*"></RowDefinition>
+                        <RowDefinition Height="1*"></RowDefinition>
+                        <RowDefinition Height="1*"></RowDefinition>
+                    </Grid.RowDefinitions>
+                    <CheckBox Grid.Row="0" Grid.Column="0" Content="Run on Windows Startup" Name="StartupCB" HorizontalAlignment="Left" Margin="15,0,0,0" VerticalAlignment="Center" IsChecked="{Binding SettingsModel.StartWithWindows}" />
+                    <Button Name="SaveSettings" Grid.Row="10" Grid.Column="2" HorizontalAlignment="Stretch"  VerticalAlignment="Center" Margin="10,10,10,10" Padding="10,5,10,5"
+                            Content="Save Settings" Click="SaveSettings_Click"/>
+                    <Button Content="Hibernate Remote Now" Grid.Column="1" HorizontalAlignment="Center" Grid.Row="6"  Padding="10,5,10,5" VerticalAlignment="Center" Click="Button_Click">
+                    </Button>
+                </Grid>
+            </TabItem>
+            <TabItem Header="Status Log" Name="TabStatus">
+                <DataGrid HorizontalAlignment="Stretch" VerticalAlignment="Stretch" ItemsSource="{Binding Log.LogMessages}" AutoGenerateColumns="False" CanUserAddRows="false">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Time" Width="1*" IsReadOnly="True" Binding="{Binding NiceTime}" />
+                        <DataGridTextColumn Header="Log Message" Width="3*" IsReadOnly="True" Binding="{Binding Message}" />
+                    </DataGrid.Columns>
+                </DataGrid>
+            </TabItem>
+        </TabControl>
+    </Grid>
+</Window>
