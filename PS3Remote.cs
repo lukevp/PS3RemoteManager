@@ -57,8 +57,27 @@ namespace PS3RemoteManager
         private HidDevice hidRemote = null;
         private DispatcherTimer timerFindRemote = new DispatcherTimer();
         private DispatcherTimer timerHibernate = new DispatcherTimer();
-        private int vendorId = 0x054c;
-        private int productId = 0x0306;
+        public class DeviceInfo {
+            public int VendorID;
+            public int ProductID;
+            public string Description;
+
+            public DeviceInfo(int vid, int pid, string desc=null)
+            {
+                VendorID = vid;
+                ProductID = pid;
+                Description = desc;
+            }
+        }
+
+        public List<DeviceInfo> Devices = new List<DeviceInfo>() 
+        {
+            new DeviceInfo(0x054c, 0x0306, "Official Sony Remote"),
+            new DeviceInfo(0x0609, 0x0306, "SMK Remote"), // SMK
+            new DeviceInfo(0x046d, 0x0306, "Logitech Harmony Remote") // SMK
+        };
+        public DeviceInfo ActiveDevice = null;
+
         private Button lastButton = null;
         private bool isButtonDown = false;
 
@@ -253,11 +272,21 @@ namespace PS3RemoteManager
         private void TimerFindRemote_Elapsed(object sender, EventArgs e)
         {
             currentApp.Log.Write(new LogMessage("@Remote@ Searching for Remote..."));
-            IEnumerator<HidDevice> devices = HidDevices.Enumerate(vendorId, productId).GetEnumerator();
-            if (devices.MoveNext()) hidRemote = devices.Current;
+            hidRemote = null;
+            foreach (var device in Devices)
+            {
+                IEnumerator<HidDevice> hidDevices = HidDevices.Enumerate(device.VendorID, device.ProductID).GetEnumerator();
+                if (hidDevices.MoveNext())
+                {
+                    hidRemote = hidDevices.Current;
+                    ActiveDevice = device;
+                    break;
+                }
+            }
+
             if (hidRemote != null)
             {
-                currentApp.Log.Write(new LogMessage("@Remote@ Found Remote!"));
+                currentApp.Log.Write(new LogMessage(String.Format("@Remote@ Found Remote! VendorID: {0}, Product ID: {1}, Description: {2}", ActiveDevice.VendorID, ActiveDevice.ProductID, ActiveDevice.Description)));
                 hidRemote.OpenDevice();
 
                 if (Connected != null) Connected(this, new EventArgs());
