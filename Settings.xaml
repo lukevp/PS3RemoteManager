@@ -32,7 +32,7 @@
                         <RowDefinition Height="1*"></RowDefinition>
                         <RowDefinition Height="1*"></RowDefinition>
                     </Grid.RowDefinitions>
-                    <CheckBox Grid.Row="0" Grid.Column="0" Content="Run on Windows Startup" Name="StartupCB" HorizontalAlignment="Left" Margin="15,0,0,0" VerticalAlignment="Center" IsChecked="{Binding SettingsModel.StartWithWindows}" />
+                    <CheckBox Grid.Row="0" Grid.Column="0" Content="Run on Windows Startup" Name="StartupCB" HorizontalAlignment="Left" Margin="15,0,0,0" VerticalAlignment="Center" IsChecked="{Binding SettingsVM.StartWithWindows, Mode=TwoWay}" />
                     <Button Name="SaveSettings" Grid.Row="10" Grid.Column="2" HorizontalAlignment="Stretch"  VerticalAlignment="Center" Margin="10,10,10,10" Padding="10,5,10,5"
                             Content="Save Settings" Click="SaveSettings_Click"/>
                     <Button Content="Hibernate Remote Now" Grid.Column="1" HorizontalAlignment="Center" Grid.Row="6"  Padding="10,5,10,5" VerticalAlignment="Center" Click="Button_Click">

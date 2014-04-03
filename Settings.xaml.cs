@@ -44,7 +44,7 @@ namespace PS3RemoteManager
             {
                 using (StreamWriter sw = new StreamWriter("settings.json"))
                 {
-                    sw.Write(JsonConvert.SerializeObject(currentApp.SettingsModel));
+                    sw.Write(JsonConvert.SerializeObject(currentApp.SettingsVM));
                 }
             }
             catch

@@ -1,4 +1,12 @@
 ﻿/*
+ * 
+ * 
+Copyright (c) 2014 Luke Paireepinart
+
+
+
+
+
 Copyright (c) 2011 Ben Barron
 
 Permission is hereby granted, free of charge, to any person obtaining a copy 
@@ -25,358 +33,248 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Timers;
+using HidLibrary;
+using WindowsAPI;
+using System.Windows.Threading;
 
 namespace PS3RemoteManager
 {
-    using System;
-    using System.Collections.Generic;
-    using System.Timers;
-
-    using HidLibrary;
-    using WindowsAPI;
-
-    namespace PS3BluMote
+    public class PS3Remote
     {
-        class PS3Remote
+        // TODO: schedule events on Dispatcher thread.
+
+        public delegate void buttonDelegate(PS3Remote.Button b);
+        public buttonDelegate ButtonDown = null;
+        public buttonDelegate ButtonUp = null;
+        //public event EventHandler<Button> ButtonDown;
+        //public event EventHandler<Button> ButtonUp;
+
+        public event EventHandler<EventArgs> BatteryLifeChanged;
+        public event EventHandler<EventArgs> Connected;
+        public event EventHandler<EventArgs> Disconnected;
+
+        private HidDevice hidRemote = null;
+        private DispatcherTimer timerFindRemote = new DispatcherTimer();
+        private DispatcherTimer timerHibernate = new DispatcherTimer();
+        private int vendorId = 0x054c;
+        private int productId = 0x0306;
+        private Button lastButton = null;
+        private bool isButtonDown = false;
+
+        private byte _batteryLife = 100;
+        private App currentApp;
+
+        /*
+        public void setVendorId(string vendorid)
         {
-            public event EventHandler<EventArgs> BatteryLifeChanged;
-            public event EventHandler<ButtonData> ButtonDown;
-            public event EventHandler<ButtonData> ButtonReleased;
-            public event EventHandler<EventArgs> Connected;
-            public event EventHandler<EventArgs> Disconnected;
-
-            private HidDevice hidRemote = null;
-            private Timer timerFindRemote = null;
-            private Timer timerHibernation = null;
-            private int vendorId = 0x054c;
-            private int productId = 0x0306;
-            private Button lastButton = Button.Angle;
-            private bool isButtonDown = false;
-            private bool _hibernationEnabled;
-            private int findIntervalInc = 1000;
-            private int maxFindInterval = 5000;
-            private byte _batteryLife = 100;
-            private App currentApp;
-
-            public void setVendorId(string vendorid)
-            {
-                vendorId = int.Parse(vendorid.Remove(0, 2), System.Globalization.NumberStyles.HexNumber);
-            }
-            public void setProductId(string productid)
-            {
-                productId = int.Parse(productid.Remove(0, 2), System.Globalization.NumberStyles.HexNumber);
-            }
-
-            #region "Remote button codes"
-            static byte[][] buttonCodes = 
+            vendorId = int.Parse(vendorid.Remove(0, 2), System.Globalization.NumberStyles.HexNumber);
+        }
+        public void setProductId(string productid)
         {
-	        new byte[] { 0, 0, 0, 22 },     //Eject
-	        new byte[] { 0, 0, 0, 100 },    //Audio
-	        new byte[] { 0, 0, 0, 101 },    //Angle
-	        new byte[] { 0, 0, 0, 99 },     //Subtitle
-	        new byte[] { 0, 0, 0, 15 },     //Clear
-	        new byte[] { 0, 0, 0, 40 },     //Time
-	        new byte[] { 0, 0, 0, 0 },      //NUM_1
-	        new byte[] { 0, 0, 0, 1 },      //NUM_2
-	        new byte[] { 0, 0, 0, 2 },      //NUM_3
-	        new byte[] { 0, 0, 0, 3 },      //NUM_4
-	        new byte[] { 0, 0, 0, 4 },      //NUM_5
-	        new byte[] { 0, 0, 0, 5 },      //NUM_6
-	        new byte[] { 0, 0, 0, 6 },      //NUM_7
-	        new byte[] { 0, 0, 0, 7 },      //NUM_8
-	        new byte[] { 0, 0, 0, 8 },      //NUM_9
-	        new byte[] { 0, 0, 0, 9 },      //NUM_0
-	        new byte[] { 0, 0, 0, 128 },    //Blue
-	        new byte[] { 0, 0, 0, 129 },    //Red
-	        new byte[] { 0, 0, 0, 130 },    //Green
-	        new byte[] { 0, 0, 0, 131 },    //Yellow
-	        new byte[] { 0, 0, 0, 112 },    //Display
-	        new byte[] { 0, 0, 0, 26 },     //Top_Menu
-	        new byte[] { 0, 0, 0, 64 },     //PopUp_Menu
-	        new byte[] { 0, 0, 0, 14 },     //Return
-	        new byte[] { 0, 16, 0, 92 },    //Triangle
-	        new byte[] { 0, 32, 0, 93 },    //Circle
-	        new byte[] { 0, 128, 0, 95 },   //Square
-	        new byte[] { 0, 64, 0, 94 },    //Cross
-	        new byte[] { 16, 0, 0, 84 },    //Arrow_Up
-	        new byte[] { 64, 0, 0, 86 },    //Arrow_Down
-	        new byte[] { 128, 0, 0, 87 },   //Arrow_Left
-	        new byte[] { 32, 0, 0, 85 },    //Arrow_Right
-	        new byte[] { 0, 0, 8, 11 },     //Enter
-	        new byte[] { 0, 4, 0, 90 },     //L1
-	        new byte[] { 0, 1, 0, 88 },     //L2
-	        new byte[] { 2, 0, 0, 81 },     //L3
-	        new byte[] { 0, 8, 0, 91 },     //R1
-	        new byte[] { 0, 2, 0, 89 },     //R2
-	        new byte[] { 4, 0, 0, 82 },     //R3
-	        new byte[] { 0, 0, 1, 67 },     //Playstation
-	        new byte[] { 1, 0, 0, 80 },     //Select
-	        new byte[] { 8, 0, 0, 83 },     //Start
-	        new byte[] { 0, 0, 0, 50 },     //Play
-	        new byte[] { 0, 0, 0, 56 },     //Stop
-	        new byte[] { 0, 0, 0, 57 },     //Pause
-	        new byte[] { 0, 0, 0, 51 },     //Scan_Back
-	        new byte[] { 0, 0, 0, 52 },     //Scan_Forward
-	        new byte[] { 0, 0, 0, 48 },     //Prev
-	        new byte[] { 0, 0, 0, 49 },     //Next
-	        new byte[] { 0, 0, 0, 96 },     //Step_Back
-	        new byte[] { 0, 0, 0, 97 },     //Step_Forward
-            new byte[] { 0, 0, 0, 118 },    //instant back
-            new byte[] { 0, 0, 0, 117 },    //instant fwd
-            new byte[] { 0, 0, 0, 16 },     //channel up
-            new byte[] { 0, 0, 0, 17 },     //channel down
-            new byte[] { 0, 0, 0, 12 }      // "-/--" dash_slash_dash_dash
+            productId = int.Parse(productid.Remove(0, 2), System.Globalization.NumberStyles.HexNumber);
+        }*/
+
+
+        #region Buttons Definition
+        public class Button
+        {
+            private byte[] _buttonCodes = new byte[4];
+            public string Name;
+
+            public Button(string name, byte a=0, byte b=0, byte c=0, byte d=0)
+            {
+                Name = name;
+                _buttonCodes[0] = a;
+                _buttonCodes[1] = b;
+                _buttonCodes[2] = c;
+                _buttonCodes[3] = d;
+            }
+            public override bool Equals(object obj)
+            {
+                Button otherButton = (Button)obj;
+                // compare on buttoncode, disregard name.
+                return (_buttonCodes[0] == otherButton._buttonCodes[0] && _buttonCodes[1] == otherButton._buttonCodes[1] && _buttonCodes[2] == otherButton._buttonCodes[2] && _buttonCodes[3] == otherButton._buttonCodes[3]);
+            }
+            public override int GetHashCode()
+            {
+                return _buttonCodes[0]<<24+_buttonCodes[1]<<16+_buttonCodes[2]<<8+_buttonCodes[3];
+            }
+        }
+        List<Button> Buttons = new List<Button>()
+        {
+            new Button("Num_1", 0, 0, 0, 0),
+            new Button("Num_2", 0, 0, 0, 1),
+            new Button("Num_3", 0, 0, 0, 2),
+            new Button("Num_4", 0, 0, 0, 3),
+            new Button("Num_5", 0, 0, 0, 4),
+            new Button("Num_6", 0, 0, 0, 5),
+            new Button("Num_7", 0, 0, 0, 6),
+            new Button("Num_8", 0, 0, 0, 7),
+            new Button("Num_9", 0, 0, 0, 8),
+            new Button("Num_0", 0, 0, 0, 9),
+            new Button("Dash_Slash_Dash_Dash", 0, 0, 0, 12),
+	        new Button("Return", 0, 0, 0, 14),
+	        new Button("Clear", 0, 0, 0, 15),
+            new Button("Channel_Up", 0, 0, 0, 16),
+            new Button("Channel_Down", 0, 0, 0, 17),
+            new Button("Eject", 0, 0, 0, 22),
+	        new Button("Top_Menu", 0, 0, 0, 26),
+	        new Button("Time", 0, 0, 0, 40),
+	        new Button("Prev", 0, 0, 0, 48),
+	        new Button("Next", 0, 0, 0, 49),
+	        new Button("Play", 0, 0, 0, 50),
+	        new Button("Scan_Back", 0, 0, 0, 51),
+	        new Button("Scan_Forward", 0, 0, 0, 52),
+	        new Button("Stop", 0, 0, 0, 56),
+	        new Button("Pause", 0, 0, 0, 57),
+	        new Button("PopUp_Menu", 0, 0, 0, 64),
+	        new Button("Step_Back", 0, 0, 0, 96),
+	        new Button("Step_Forward", 0, 0, 0, 97),
+	        new Button("Subtitle", 0, 0, 0, 99),
+	        new Button("Audio", 0, 0, 0, 100),
+	        new Button("Angle", 0, 0, 0, 101),
+	        new Button("Display", 0, 0, 0, 112),
+            new Button("Instant_Forward", 0, 0, 0, 117),
+            new Button("Instant_Back", 0, 0, 0, 118),
+	        new Button("Blue", 0, 0, 0, 128),
+	        new Button("Red", 0, 0, 0, 129),
+	        new Button("Green", 0, 0, 0, 130),
+	        new Button("Yellow", 0, 0, 0, 131),
+	        new Button("Playstation", 0, 0, 1, 67),
+	        new Button("Enter", 0, 0, 8, 11),
+	        new Button("L2", 0, 1, 0, 88),
+	        new Button("R2", 0, 2, 0, 89),
+	        new Button("L1", 0, 4, 0, 90),
+	        new Button("R1", 0, 8, 0, 91),
+	        new Button("Triangle", 0, 16, 0, 92),
+	        new Button("Circle", 0, 32, 0, 93),
+	        new Button("Cross", 0, 64, 0, 94),
+	        new Button("Square", 0, 128, 0, 95),
+	        new Button("Select", 1, 0, 0, 80),
+	        new Button("L3", 2, 0, 0, 81),
+	        new Button("R3", 4, 0, 0, 82),
+	        new Button("Start", 8, 0, 0, 83),
+	        new Button("Arrow_Up", 16, 0, 0, 84),
+	        new Button("Arrow_Right", 32, 0, 0, 85),
+	        new Button("Arrow_Down", 64, 0, 0, 86),
+	        new Button("Arrow_Left", 128, 0, 0, 87),
         };
-            #endregion
+        #endregion
 
-            public PS3Remote(int vendor, int product, bool hibernation)
+        public PS3Remote()
+        {
+            this.currentApp = App.Current as App;
+            currentApp.Log.Write(new LogMessage("@Remote@ Remote Interface Created"));
+            timerFindRemote.Interval = TimeSpan.FromMilliseconds(5000);// TODO: load this from settings.
+            timerFindRemote.Tick += new EventHandler(TimerFindRemote_Elapsed);
+            timerHibernate.Interval = TimeSpan.FromMinutes(1);
+        }
+
+        public void Connect()
+        {
+            // call findRemote immediately the first time.
+            if (hidRemote == null)
             {
-                this.currentApp = App.Current as App;
-                vendorId = vendor;
-                productId = product;
-                _hibernationEnabled = hibernation;
-
-                currentApp.Log.Write(new LogMessage("************ Starting New Instance of PS3BluMote ***************"));
-                timerHibernation = new Timer();
-                //timerHibernation.Interval = 180000;
-                //TODO: read timerHibernation Interval based off of the radio box.
-
-
-                timerHibernation.Interval = 10000;
-                timerHibernation.Elapsed += new ElapsedEventHandler(timerHibernation_Elapsed);
-
-                currentApp.Log.Write(new LogMessage("Searching for remote"));
-                timerFindRemote = new Timer();
-                timerFindRemote.Interval = 100;
-                timerFindRemote.Elapsed += new ElapsedEventHandler(timerFindRemote_Elapsed);
+                TimerFindRemote_Elapsed(null, null);
             }
+        }
 
-            public void connect()
+        public byte GetBatteryLife
+        {
+            get { return _batteryLife; }
+        }
+        private bool _connected = false;
+
+        public bool IsConnected
+        {
+            get { return _connected; }
+        }
+
+        private void ReadButtonData(HidDeviceData InData)
+        {
+            if ((InData.Status == HidDeviceData.ReadStatus.Success) && (InData.Data[0] == 1))
             {
-                timerFindRemote.Enabled = true;
-            }
+                //currentApp.Log.Write(new LogMessage("@Remote@ Read button data: " + String.Join(",", InData.Data)));
 
+                timerHibernate.Stop();
+                timerHibernate.Start();
 
-
-
-            public byte getBatteryLife
-            {
-                get { return _batteryLife; }
-            }
-
-            public bool isConnected
-            {
-                get { return timerFindRemote.Enabled; }
-            }
-
-            public bool hibernationEnabled
-            {
-                get { return _hibernationEnabled; }
-                set { _hibernationEnabled = value; }
-            }
-
-            private void readButtonData(HidDeviceData InData)
-            {
-                timerHibernation.Enabled = false;
-                if ((InData.Status == HidDeviceData.ReadStatus.Success) && (InData.Data[0] == 1))
+                if ((InData.Data[10] == 0) || (InData.Data[4] == 255)) // button released
                 {
-                    currentApp.Log.Write(new LogMessage("Read button data: " + String.Join(",", InData.Data)));
-
-                    if ((InData.Data[10] == 0) || (InData.Data[4] == 255)) // button released
+                    if (ButtonUp != null && isButtonDown && lastButton != null)
                     {
-                        if (ButtonReleased != null && isButtonDown) ButtonReleased(this, new ButtonData(lastButton));
+                        //ButtonUp(this, lastButton);
+                        currentApp.Dispatcher.BeginInvoke(ButtonUp, lastButton);
                     }
-                    else // button pressed
+                }
+                else // button pressed
+                {
+                    var pressedButton = new Button("", InData.Data[1], InData.Data[2], InData.Data[3], InData.Data[4]);
+                    foreach (var button in Buttons)
                     {
-                        byte[] bCode = { InData.Data[1], InData.Data[2], InData.Data[3], InData.Data[4] };
-
-                        int i, j;
-
-                        for (j = 0; j < 56; j++)
+                        if (button.Equals(pressedButton))
                         {
-                            for (i = 0; i < 4; i++)
-                            {
-                                if (bCode[i] != buttonCodes[j][i]) break;
-                            }
-
-                            if (i == 4) break;
-                        }
-
-                        if (j != 56)
-                        {
-                            lastButton = (Button)j;
+                            lastButton = button; // use button not pressedButton so we get official name string.
                             isButtonDown = true;
-
-                            if (ButtonDown != null) ButtonDown(this, new ButtonData(lastButton));
+                            if (ButtonDown != null)
+                            {
+                                currentApp.Dispatcher.BeginInvoke(ButtonDown, lastButton);
+                                //ButtonDown(this, lastButton);
+                            }
+                            break;
                         }
                     }
+                }
+                byte batteryReading = (byte)(InData.Data[11] * 20);
 
-                    byte batteryReading = (byte)(InData.Data[11] * 20);
-
-                    if (batteryReading != _batteryLife) //Check battery life reading.
-                    {
-                        _batteryLife = batteryReading;
-
-                        if (BatteryLifeChanged != null) BatteryLifeChanged(this, new EventArgs());
-                    }
-
-                    if (_hibernationEnabled) timerHibernation.Enabled = true;
-
-                    hidRemote.Read(readButtonData); //Read next button pressed.
-
-                    return;
+                if (batteryReading != _batteryLife) //Check battery life reading.
+                {
+                    _batteryLife = batteryReading;
+                    if (BatteryLifeChanged != null) BatteryLifeChanged(this, new EventArgs());
                 }
 
-                currentApp.Log.Write(new LogMessage("Read remote data: " + String.Join(",", InData.Data)));
+                hidRemote.Read(ReadButtonData); //Read next button pressed.
+            }
+            else
+            {
+                //currentApp.Log.Write(new LogMessage("@Remote@ Read remote data: " + String.Join(",", InData.Data)));
 
                 if (Disconnected != null) Disconnected(this, new EventArgs());
-
-
-
+                _connected = false;
+                timerHibernate.Stop();
                 hidRemote.Dispose(); //Dispose of current remote.
-
                 hidRemote = null;
 
-                timerFindRemote.Enabled = true; //Try to reconnect.
+                timerFindRemote.Start(); //Try to reconnect.
+            }
+        }
+        // TODO: reimplement max find interval.
+        private void TimerFindRemote_Elapsed(object sender, EventArgs e)
+        {
+            currentApp.Log.Write(new LogMessage("@Remote@ Searching for Remote..."));
+            IEnumerator<HidDevice> devices = HidDevices.Enumerate(vendorId, productId).GetEnumerator();
+            if (devices.MoveNext()) hidRemote = devices.Current;
+            if (hidRemote != null)
+            {
+                currentApp.Log.Write(new LogMessage("@Remote@ Found Remote!"));
+                hidRemote.OpenDevice();
+
+                if (Connected != null) Connected(this, new EventArgs());
+
+                hidRemote.Read(ReadButtonData);
+                _connected = true;
+                timerHibernate.Start();
+                timerFindRemote.Stop();
             }
 
-            private void timerFindRemote_Elapsed(object sender, ElapsedEventArgs e)
+            else
             {
-                if (hidRemote == null)
-                {
-
-                    IEnumerator<HidDevice> devices = HidDevices.Enumerate(vendorId, productId).GetEnumerator();
-
-                    if (devices.MoveNext()) hidRemote = devices.Current;
-
-                    if (hidRemote != null)
-                    {
-                        currentApp.Log.Write(new LogMessage("Remote found"));
-
-                        hidRemote.OpenDevice();
-
-                        if (Connected != null)
-                        {
-                            Connected(this, new EventArgs());
-                        }
-
-                        hidRemote.Read(readButtonData);
-
-                        timerFindRemote.Enabled = false;
-                    }
-
-                    else
-                    {
-                        if (timerFindRemote.Interval < maxFindInterval)
-                        {
-                            timerFindRemote.Interval = Math.Min(timerFindRemote.Interval + findIntervalInc, maxFindInterval);
-                           currentApp.Log.Write(new LogMessage(String.Format("Remote not found. Backing off search timeout to {0} ms.", timerFindRemote.Interval)));
-                        }
-                        else
-                        {
-                            currentApp.Log.Write(new LogMessage(String.Format("Remote not found.  Waiting for {0} ms.", timerFindRemote.Interval)));
-                        }
-                    }
-                }
-                else
-                {
-                    timerFindRemote.Enabled = false;
-                }
-            }
-
-            private void timerHibernation_Elapsed(object sender, ElapsedEventArgs e)
-            {
-                currentApp.Log.Write(new LogMessage("Attempting to hibernate remote"));
-
-                try
-                {
-                    HardwareAPI.DisableDevice(n => n.ToUpperInvariant().Contains
-                        ("_VID&0002054C_PID&0306"), true);
-
-                    System.Threading.Thread.Sleep(1500);
-
-                    HardwareAPI.DisableDevice(n => n.ToUpperInvariant().Contains
-                        ("_VID&0002054C_PID&0306"), false);
-                }
-                catch (Exception ex)
-                {
-                    currentApp.Log.Write(new LogMessage("Unable to hibernate remote:" + ex.Message));
-                }
-
-                timerFindRemote.Enabled = true;
-                timerHibernation.Enabled = false;
-            }
-
-            public class ButtonData : EventArgs
-            {
-                public Button button;
-
-                public ButtonData(Button btn)
-                {
-                    button = btn;
-                }
-            }
-
-            public enum Button
-            {
-                Eject,
-                Audio,
-                Angle,
-                Subtitle,
-                Clear,
-                Time,
-                NUM_1,
-                NUM_2,
-                NUM_3,
-                NUM_4,
-                NUM_5,
-                NUM_6,
-                NUM_7,
-                NUM_8,
-                NUM_9,
-                NUM_0,
-                Blue,
-                Red,
-                Green,
-                Yellow,
-                Display,
-                Top_Menu,
-                PopUp_Menu,
-                Return,
-                Triangle,
-                Circle,
-                Square,
-                Cross,
-                Arrow_Up,
-                Arrow_Down,
-                Arrow_Left,
-                Arrow_Right,
-                Enter,
-                L1,
-                L2,
-                L3,
-                R1,
-                R2,
-                R3,
-                Playstation,
-                Select,
-                Start,
-                Play,
-                Stop,
-                Pause,
-                Scan_Back,
-                Scan_Forward,
-                Prev,
-                Next,
-                Step_Back,
-                Step_Forward,
-                Instant_Back,
-                Instant_Forward,
-                Channel_Up,
-                Channel_Down,
-                dash_slash_dash_dash
+                currentApp.Log.Write(new LogMessage(String.Format("@Remote@ Remote not found.  Waiting for {0} ms.", timerFindRemote.Interval)));
+                _connected = false;
+                timerHibernate.Stop();
+                timerFindRemote.Start();
             }
         }
     }
-
 }

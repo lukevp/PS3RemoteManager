@@ -15,8 +15,6 @@ namespace PS3RemoteManager
         {
             this.log = log;
         }
-        private bool success = false;
-
         // hibernate remote.
         public void HibernateRemoteWorkerProgressChanged(object sender, ProgressChangedEventArgs e)
         {
@@ -33,7 +31,6 @@ namespace PS3RemoteManager
         {
 
             BackgroundWorker worker = sender as BackgroundWorker;
-            success = false;
 
             string deviceConnectSoundFile = "";
             string deviceDisconnectSoundFile = "";
@@ -80,8 +77,6 @@ namespace PS3RemoteManager
                         // slow
                         remoteInfo.SetServiceState(InTheHand.Net.Bluetooth.BluetoothService.HumanInterfaceDevice, true);
                         worker.ReportProgress(0, "        - HID service enabled successfully!");
-
-                        success = true;
                         worker.ReportProgress(1, "Remote Successfully Hibernated!");
                     }
                     finally
@@ -106,15 +101,13 @@ namespace PS3RemoteManager
                     worker.ReportProgress(1, "Hibernation Failed: PS3 remote could not be found.");
                 }
             }
-            catch (System.Net.Sockets.SocketException ex)
+            catch (System.Net.Sockets.SocketException)
             {
                 worker.ReportProgress(1, "Hibernation Failed: device is already in a sleep state.");
-                success = false;
             }
             catch (Exception ex)
             {
                 worker.ReportProgress(0, "Exception during hibernation: " + ex.Message);
-                success = false;
             }
         }
     }

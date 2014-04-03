@@ -33,10 +33,33 @@ namespace PS3RemoteManager
 
         // Logging to file and to the UI
         private DebugLog _log = new DebugLog();
-        public DebugLog Log { get { return _log; } set { _log = value; } }    
+        public DebugLog Log { get { return _log; } set { _log = value; } }
 
         // Settings for the application
-        public SettingsModel SettingsModel;
+        private SettingsModel _settingsVM;
+        public SettingsModel SettingsVM { get { return _settingsVM; } set { _settingsVM = value; } }
+
+        //TODO: button mappings
+
+        //Remote Listener
+        public PS3Remote Remote;
+
+        private void remoteConnected(object sender, EventArgs e)
+        {
+            Log.Write(new LogMessage("PS3 Bluetooth Remote Connected!", DebugLevel.BALLOON));
+        }
+        private void remoteDisconnected(object sender, EventArgs e)
+        {
+            Log.Write(new LogMessage("PS3 Bluetooth Remote Disconnected!", DebugLevel.BALLOON));
+        }
+        private void buttonDown(PS3Remote.Button b)
+        {
+            Log.Write(new LogMessage("Button Pressed: "+ b.Name));
+        }
+        private void buttonUp(PS3Remote.Button b)
+        {
+            Log.Write(new LogMessage("Button Released: " + b.Name));
+        }
 
         protected override void OnStartup(StartupEventArgs e)
         {
@@ -56,8 +79,17 @@ namespace PS3RemoteManager
             
             //create the notifyicon (it's a resource declared in NotifyIconResources.xaml)
             NotifyIcon = (TaskbarIcon)FindResource("NotifyIcon");
-            Log.Write(new LogMessage("Searching for PS3 Bluetooth Remote", DebugLevel.BALLOON));
-            Log.Write(new LogMessage("PS3 Bluetooth Remote Status: Connected", DebugLevel.BALLOON));
+
+
+            Log.Write(new LogMessage("Searching for PS3 Bluetooth Remote...", DebugLevel.BALLOON));
+            Remote = new PS3Remote();
+            Remote.Connected += new EventHandler<EventArgs>(remoteConnected);
+            Remote.Disconnected += new EventHandler<EventArgs>(remoteDisconnected);
+            //Remote.ButtonDown += new EventHandler<PS3Remote.Button>(buttonDown);
+            Remote.ButtonDown = new PS3Remote.buttonDelegate(this.buttonDown);
+            Remote.ButtonUp = new PS3Remote.buttonDelegate(this.buttonUp);
+            //Remote.ButtonUp += new EventHandler<PS3Remote.Button>(buttonUp);
+            Remote.Connect();
             RemoteSleep = new RemoteSleep(this.Log);
 
             // setup hibernate backgroundworker
@@ -70,12 +102,12 @@ namespace PS3RemoteManager
             {
                 using (StreamReader sr = new StreamReader("settings.json"))
                 {
-                    SettingsModel = JsonConvert.DeserializeObject<SettingsModel>(sr.ReadToEnd());
+                    SettingsVM = JsonConvert.DeserializeObject<SettingsModel>(sr.ReadToEnd());
                 }
             }
             catch
             {
-                SettingsModel = new SettingsModel();
+                SettingsVM = new SettingsModel();
             }
         }
 
