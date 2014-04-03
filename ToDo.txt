@@ -1,0 +1,4 @@
+﻿
+
+- make log messages scroll page if you're not focused on a row other than the last row
+
