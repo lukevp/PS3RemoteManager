@@ -135,16 +135,13 @@
     </Resource>
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="Resources\ps3_new.jpg">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Resources\ps3_old.jpg">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    <Resource Include="Resources\Icon Disconnected.ico">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Resource>
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="Resources\Icon Disconnected.ico">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    <Resource Include="UI\RemoteImages\ps3_new.jpg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

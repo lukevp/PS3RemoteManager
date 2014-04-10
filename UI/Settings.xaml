@@ -7,7 +7,7 @@
             <ColumnDefinition Width="145px"></ColumnDefinition>
             <ColumnDefinition Width="1*"></ColumnDefinition>
         </Grid.ColumnDefinitions>
-        <Image Grid.Column="0" VerticalAlignment="Center" Source="Resources\ps3_new.jpg" HorizontalAlignment="Center" />
+        <Image Grid.Column="0" VerticalAlignment="Center" Source="RemoteImages\ps3_new.jpg" HorizontalAlignment="Center" />
         <TabControl Name="SettingsTabs" Grid.Column="1" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
             <TabItem Header="Remote Configuration" Name="TabRemote">
                 <Grid Background="#FFE5E5E5"/>
