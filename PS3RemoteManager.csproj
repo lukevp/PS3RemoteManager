@@ -62,28 +62,28 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <ApplicationDefinition Include="App.xaml">
+    <ApplicationDefinition Include="UI\App.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Compile Include="ButtonConfigModel.cs" />
-    <Compile Include="RemoteSleep.cs" />
-    <Compile Include="SettingsModel.cs" />
-    <Page Include="NotifyIconResources.xaml">
+    <Compile Include="Models\ButtonConfigModel.cs" />
+    <Compile Include="DeviceInteraction\RemoteSleep.cs" />
+    <Compile Include="Models\SettingsModel.cs" />
+    <Page Include="UI\NotifyIconResources.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Settings.xaml">
+    <Page Include="UI\Settings.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Compile Include="App.xaml.cs">
+    <Compile Include="UI\App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="DebugLog.cs" />
-    <Compile Include="NotifyIconViewModel.cs" />
-    <Compile Include="PS3Remote.cs" />
+    <Compile Include="Models\DebugLog.cs" />
+    <Compile Include="Models\NotifyIconViewModel.cs" />
+    <Compile Include="DeviceInteraction\PS3Remote.cs" />
     <Compile Include="Libs\HidAsyncState.cs" />
     <Compile Include="Libs\HidDevice.cs" />
     <Compile Include="Libs\HidDeviceAttributes.cs" />
@@ -93,7 +93,7 @@
     <Compile Include="Libs\HidDevices.cs" />
     <Compile Include="Libs\HidReport.cs" />
     <Compile Include="Libs\NativeMethods.cs" />
-    <Compile Include="Settings.xaml.cs">
+    <Compile Include="UI\Settings.xaml.cs">
       <DependentUpon>Settings.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
@@ -146,9 +146,6 @@
     <Resource Include="Resources\Icon Disconnected.ico">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Resource>
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="ToDo.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
