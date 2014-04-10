@@ -57,6 +57,9 @@
     <Reference Include="WindowsBase" />
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
+    <Reference Include="WindowsInput">
+      <HintPath>packages\InputSimulator.1.0.4.0\lib\net20\WindowsInput.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <ApplicationDefinition Include="App.xaml">
@@ -81,7 +84,6 @@
     <Compile Include="DebugLog.cs" />
     <Compile Include="NotifyIconViewModel.cs" />
     <Compile Include="PS3Remote.cs" />
-    <Compile Include="Libs\HardwareAPI.cs" />
     <Compile Include="Libs\HidAsyncState.cs" />
     <Compile Include="Libs\HidDevice.cs" />
     <Compile Include="Libs\HidDeviceAttributes.cs" />
@@ -91,7 +93,6 @@
     <Compile Include="Libs\HidDevices.cs" />
     <Compile Include="Libs\HidReport.cs" />
     <Compile Include="Libs\NativeMethods.cs" />
-    <Compile Include="Libs\SendInputAPI.cs" />
     <Compile Include="Settings.xaml.cs">
       <DependentUpon>Settings.xaml</DependentUpon>
       <SubType>Code</SubType>

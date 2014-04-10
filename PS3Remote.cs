@@ -35,24 +35,25 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Timers;
 using HidLibrary;
-using WindowsAPI;
+
 using System.Windows.Threading;
 
 namespace PS3RemoteManager
 {
     public class PS3Remote
     {
-        // TODO: schedule events on Dispatcher thread.
-
         public delegate void buttonDelegate(PS3Remote.Button b);
         public buttonDelegate ButtonDown = null;
         public buttonDelegate ButtonUp = null;
-        //public event EventHandler<Button> ButtonDown;
-        //public event EventHandler<Button> ButtonUp;
 
-        public event EventHandler<EventArgs> BatteryLifeChanged;
-        public event EventHandler<EventArgs> Connected;
-        public event EventHandler<EventArgs> Disconnected;
+        public delegate void batteryDelegate(int level);
+        public batteryDelegate BatteryLifeChanged = null;
+
+        public delegate void eventDelegate();
+        public eventDelegate Connected = null;
+        public eventDelegate Disconnected = null;
+
+
 
         private HidDevice hidRemote = null;
         private DispatcherTimer timerFindRemote = new DispatcherTimer();
@@ -83,16 +84,6 @@ namespace PS3RemoteManager
 
         private byte _batteryLife = 100;
         private App currentApp;
-
-        /*
-        public void setVendorId(string vendorid)
-        {
-            vendorId = int.Parse(vendorid.Remove(0, 2), System.Globalization.NumberStyles.HexNumber);
-        }
-        public void setProductId(string productid)
-        {
-            productId = int.Parse(productid.Remove(0, 2), System.Globalization.NumberStyles.HexNumber);
-        }*/
 
 
         #region Buttons Definition
@@ -214,8 +205,6 @@ namespace PS3RemoteManager
         {
             if ((InData.Status == HidDeviceData.ReadStatus.Success) && (InData.Data[0] == 1))
             {
-                //currentApp.Log.Write(new LogMessage("@Remote@ Read button data: " + String.Join(",", InData.Data)));
-
                 timerHibernate.Stop();
                 timerHibernate.Start();
 
@@ -223,7 +212,6 @@ namespace PS3RemoteManager
                 {
                     if (ButtonUp != null && isButtonDown && lastButton != null)
                     {
-                        //ButtonUp(this, lastButton);
                         currentApp.Dispatcher.BeginInvoke(ButtonUp, lastButton);
                     }
                 }
@@ -239,7 +227,6 @@ namespace PS3RemoteManager
                             if (ButtonDown != null)
                             {
                                 currentApp.Dispatcher.BeginInvoke(ButtonDown, lastButton);
-                                //ButtonDown(this, lastButton);
                             }
                             break;
                         }
@@ -250,16 +237,15 @@ namespace PS3RemoteManager
                 if (batteryReading != _batteryLife) //Check battery life reading.
                 {
                     _batteryLife = batteryReading;
-                    if (BatteryLifeChanged != null) BatteryLifeChanged(this, new EventArgs());
+                    if (BatteryLifeChanged != null)  currentApp.Dispatcher.BeginInvoke(BatteryLifeChanged, batteryReading);
                 }
 
                 hidRemote.Read(ReadButtonData); //Read next button pressed.
             }
             else
             {
-                //currentApp.Log.Write(new LogMessage("@Remote@ Read remote data: " + String.Join(",", InData.Data)));
 
-                if (Disconnected != null) Disconnected(this, new EventArgs());
+                if (Disconnected != null) currentApp.Dispatcher.BeginInvoke(Disconnected);
                 _connected = false;
                 timerHibernate.Stop();
                 hidRemote.Dispose(); //Dispose of current remote.
@@ -289,7 +275,7 @@ namespace PS3RemoteManager
                 currentApp.Log.Write(new LogMessage(String.Format("@Remote@ Found Remote! VendorID: {0}, Product ID: {1}, Description: {2}", ActiveDevice.VendorID, ActiveDevice.ProductID, ActiveDevice.Description)));
                 hidRemote.OpenDevice();
 
-                if (Connected != null) Connected(this, new EventArgs());
+                if (Connected != null) currentApp.Dispatcher.BeginInvoke(Connected);
 
                 hidRemote.Read(ReadButtonData);
                 _connected = true;
@@ -299,7 +285,7 @@ namespace PS3RemoteManager
 
             else
             {
-                currentApp.Log.Write(new LogMessage(String.Format("@Remote@ Remote not found.  Waiting for {0} ms.", timerFindRemote.Interval)));
+                currentApp.Log.Write(new LogMessage(String.Format("@Remote@ Remote not found.  Waiting...", timerFindRemote.Interval)));
                 _connected = false;
                 timerHibernate.Stop();
                 timerFindRemote.Start();

@@ -18,13 +18,7 @@ namespace PS3RemoteManager
         // hibernate remote.
         public void HibernateRemoteWorkerProgressChanged(object sender, ProgressChangedEventArgs e)
         {
-            if (e.ProgressPercentage == 1)  // using progress as a flag.
-            {
-                log.Write(e.UserState.ToString(), DebugLevel.BALLOON);
-            }
-            else {
-                log.Write(e.UserState.ToString());
-            }
+            log.Write(e.UserState.ToString());
         }
 
         public void HibernateRemoteWorker(object sender, DoWorkEventArgs e)
@@ -36,7 +30,7 @@ namespace PS3RemoteManager
             string deviceDisconnectSoundFile = "";
             try
             {
-                worker.ReportProgress(1, "Attempting to hibernate remote...");
+                worker.ReportProgress(0, "Attempting to hibernate remote...");
                 worker.ReportProgress(0, "    - Creating Bluetooth client");
                 InTheHand.Net.Sockets.BluetoothClient cli = new InTheHand.Net.Sockets.BluetoothClient(); //Create a bluetooth client for the enquiry
                 worker.ReportProgress(0, "    - Discovering devices");
@@ -77,7 +71,7 @@ namespace PS3RemoteManager
                         // slow
                         remoteInfo.SetServiceState(InTheHand.Net.Bluetooth.BluetoothService.HumanInterfaceDevice, true);
                         worker.ReportProgress(0, "        - HID service enabled successfully!");
-                        worker.ReportProgress(1, "Remote Successfully Hibernated!");
+                        worker.ReportProgress(0, "Remote Successfully Hibernated!");
                     }
                     finally
                     {
@@ -98,12 +92,12 @@ namespace PS3RemoteManager
                 }
                 else
                 {
-                    worker.ReportProgress(1, "Hibernation Failed: PS3 remote could not be found.");
+                    worker.ReportProgress(0, "Hibernation Failed: PS3 remote could not be found.");
                 }
             }
             catch (System.Net.Sockets.SocketException)
             {
-                worker.ReportProgress(1, "Hibernation Failed: device is already in a sleep state.");
+                worker.ReportProgress(0, "Hibernation Failed: device is already in a sleep state.");
             }
             catch (Exception ex)
             {

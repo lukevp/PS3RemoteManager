@@ -11,6 +11,8 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
+using WindowsInput;
+using WindowsInput.Native;
 
 namespace PS3RemoteManager
 {
@@ -39,22 +41,47 @@ namespace PS3RemoteManager
         private SettingsModel _settingsVM;
         public SettingsModel SettingsVM { get { return _settingsVM; } set { _settingsVM = value; } }
 
-        //TODO: button mappings
+
+        public InputSimulator vKeyboard = new InputSimulator();
 
         //Remote Listener
         public PS3Remote Remote;
+        private void batteryLifeChanged(int batteryLife)
+        {
+            if (batteryLife <= 40 && batteryLife > 20)
+            {
+                Log.Write(new LogMessage(String.Format("Battery Low.  Consider replacing batteries soon. battery is currently at {0}%.", batteryLife), DebugLevel.BALLOON));
+            }
+            else if (batteryLife <= 20)
+            {
+                Log.Write(new LogMessage(String.Format("BATTERY CRITICALLY LOW!!! Consider replacing batteries soon. battery is currently at {0}%.", batteryLife), DebugLevel.BALLOON));
+            }
+            else
+            {
+                Log.Write(new LogMessage(String.Format("PS3 Bluetooth Remote Battery is now at {0}%.", batteryLife), DebugLevel.BALLOON));
+            }
+        }
 
-        private void remoteConnected(object sender, EventArgs e)
+        private void remoteConnected()
         {
             Log.Write(new LogMessage("PS3 Bluetooth Remote Connected!", DebugLevel.BALLOON));
         }
-        private void remoteDisconnected(object sender, EventArgs e)
+        private void remoteDisconnected()
         {
             Log.Write(new LogMessage("PS3 Bluetooth Remote Disconnected!", DebugLevel.BALLOON));
         }
         private void buttonDown(PS3Remote.Button b)
         {
             Log.Write(new LogMessage("Button Pressed: "+ b.Name));
+            if (this.SettingsVM.Commands.ContainsKey(b.Name))
+            {
+                var command = this.SettingsVM.Commands[b.Name];
+                if (command.Type == CommandType.KEYBOARD)
+                {
+                    command.Exec(this);
+                }
+            }
+
         }
         private void buttonUp(PS3Remote.Button b)
         {
@@ -83,12 +110,12 @@ namespace PS3RemoteManager
 
             Log.Write(new LogMessage("Searching for PS3 Bluetooth Remote...", DebugLevel.BALLOON));
             Remote = new PS3Remote();
-            Remote.Connected += new EventHandler<EventArgs>(remoteConnected);
-            Remote.Disconnected += new EventHandler<EventArgs>(remoteDisconnected);
-            //Remote.ButtonDown += new EventHandler<PS3Remote.Button>(buttonDown);
+            Remote.BatteryLifeChanged = new PS3Remote.batteryDelegate(this.batteryLifeChanged);
+            Remote.Connected = new PS3Remote.eventDelegate(this.remoteConnected);
+            Remote.Disconnected = new PS3Remote.eventDelegate(this.remoteDisconnected);
             Remote.ButtonDown = new PS3Remote.buttonDelegate(this.buttonDown);
             Remote.ButtonUp = new PS3Remote.buttonDelegate(this.buttonUp);
-            //Remote.ButtonUp += new EventHandler<PS3Remote.Button>(buttonUp);
+
             Remote.Connect();
             RemoteSleep = new RemoteSleep(this.Log);
 
