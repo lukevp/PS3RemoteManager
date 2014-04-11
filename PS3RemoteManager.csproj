@@ -140,8 +140,8 @@
     </Resource>
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="UI\RemoteImages\ps3_new.jpg">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    <Resource Include="UI\Images\ps3_new.jpg">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Resource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
