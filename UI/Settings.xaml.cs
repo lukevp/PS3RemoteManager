@@ -26,8 +26,9 @@ namespace PS3RemoteManager
 
         public Settings()
         {
-            this.DataContext = App.Current;
             currentApp = App.Current as App;
+            this.DataContext = currentApp;
+            currentApp.Log.LogChanged = logChanged;
             InitializeComponent();
         }
 
@@ -55,6 +56,27 @@ namespace PS3RemoteManager
             currentApp.Log.Write("Settings saved to settings.json!");
         }
 
+
+        private void logChanged()
+        {
+            if (this.StatusLog.Items.Count > 0)
+            {
+                if (VisualTreeHelper.GetChildrenCount(this.StatusLog) > 0)
+                {
+                    var border = VisualTreeHelper.GetChild(this.StatusLog, 0) as Decorator;
+                    if (border != null)
+                    {
+                        var scroll = border.Child as ScrollViewer;
+                        if (scroll != null) scroll.ScrollToEnd();
+                    }
+                }
+            }
+        }
+
+        private void Window_Closed(object sender, EventArgs e)
+        {
+            currentApp.Log.LogChanged = null;
+        }
     }
 
 }

@@ -59,25 +59,5 @@ namespace PS3RemoteManager.Properties {
                 resourceCulture = value;
             }
         }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Icon similar to (Icon).
-        /// </summary>
-        internal static System.Drawing.Icon Icon_Connected {
-            get {
-                object obj = ResourceManager.GetObject("Icon_Connected", resourceCulture);
-                return ((System.Drawing.Icon)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Icon similar to (Icon).
-        /// </summary>
-        internal static System.Drawing.Icon Icon_Disconnected {
-            get {
-                object obj = ResourceManager.GetObject("Icon_Disconnected", resourceCulture);
-                return ((System.Drawing.Icon)(obj));
-            }
-        }
     }
 }

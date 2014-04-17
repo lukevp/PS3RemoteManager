@@ -46,6 +46,9 @@ namespace PS3RemoteManager
     {
         private App currentApp = null;
 
+        public delegate void eventDelegate();
+        public eventDelegate LogChanged = null;
+
         private ObservableCollection<LogMessage> _logMessages = new ObservableCollection<LogMessage>();
         public ObservableCollection<LogMessage> LogMessages { get { return _logMessages; } }
         
@@ -63,6 +66,10 @@ namespace PS3RemoteManager
                     currentApp.NotifyIcon.ShowBalloonTip("PS3RemoteManager", message.Message, BalloonIcon.Info);
             }
             this.LogMessages.Add(message);
+            if (this.LogChanged != null)
+            {
+                currentApp.Dispatcher.BeginInvoke(LogChanged);
+            }
         }
 
         /*

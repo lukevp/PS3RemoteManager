@@ -6,6 +6,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Configuration;
 using System.Data;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -58,34 +59,38 @@ namespace PS3RemoteManager
             }
             else
             {
-                Log.Write(new LogMessage(String.Format("PS3 Bluetooth Remote Battery is now at {0}%.", batteryLife), DebugLevel.BALLOON));
+                Log.Write(new LogMessage(String.Format("PS3 Bluetooth Remote Battery is currently at {0}%.", batteryLife), DebugLevel.BALLOON));
             }
         }
+
+        private Icon iconDisconnected = new Icon("Resources/Icon Disconnected.ico");
+        private Icon iconConnected = new Icon("Resources/Icon Connected.ico");
 
         private void remoteConnected()
         {
             Log.Write(new LogMessage("PS3 Bluetooth Remote Connected!", DebugLevel.BALLOON));
+            NotifyIcon.Icon = iconConnected;
+            NotifyIcon.ToolTipText = "Remote Connected";
         }
         private void remoteDisconnected()
         {
             Log.Write(new LogMessage("PS3 Bluetooth Remote Disconnected!", DebugLevel.BALLOON));
+            NotifyIcon.Icon = iconDisconnected;
+            NotifyIcon.ToolTipText = "Remote Disconnected";
         }
         private void buttonDown(PS3Remote.Button b)
         {
-            Log.Write(new LogMessage("Button Pressed: "+ b.Name));
-            if (this.SettingsVM.Commands.ContainsKey(b.Name))
+            //Log.Write(new LogMessage("Button Pressed: "+ b.Name));
+            var command = this.SettingsVM.ActiveConfig.Commands.Where(x => x.ButtonName == b.Name).First();
+            if (command != null)
             {
-                var command = this.SettingsVM.Commands[b.Name];
-                if (command.Type == CommandType.KEYBOARD)
-                {
-                    command.Exec(this);
-                }
+                command.Exec(this);
             }
 
         }
         private void buttonUp(PS3Remote.Button b)
         {
-            Log.Write(new LogMessage("Button Released: " + b.Name));
+            //Log.Write(new LogMessage("Button Released: " + b.Name));
         }
 
         protected override void OnStartup(StartupEventArgs e)

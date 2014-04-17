@@ -176,7 +176,7 @@ namespace PS3RemoteManager
         {
             this.currentApp = App.Current as App;
             currentApp.Log.Write(new LogMessage("@Remote@ Remote Interface Created"));
-            timerFindRemote.Interval = TimeSpan.FromMilliseconds(5000);// TODO: load this from settings.
+            timerFindRemote.Interval = TimeSpan.FromMilliseconds(1000);
             timerFindRemote.Tick += new EventHandler(TimerFindRemote_Elapsed);
             timerHibernate.Interval = TimeSpan.FromMinutes(1);
         }
@@ -254,10 +254,14 @@ namespace PS3RemoteManager
                 timerFindRemote.Start(); //Try to reconnect.
             }
         }
-        // TODO: reimplement max find interval.
+        private int missingCount = 0;
+
         private void TimerFindRemote_Elapsed(object sender, EventArgs e)
         {
-            currentApp.Log.Write(new LogMessage("@Remote@ Searching for Remote..."));
+            if (missingCount < 5)
+            {
+                currentApp.Log.Write(new LogMessage("@Remote@ Searching for Remote..."));
+            }
             hidRemote = null;
             foreach (var device in Devices)
             {
@@ -272,6 +276,7 @@ namespace PS3RemoteManager
 
             if (hidRemote != null)
             {
+                missingCount = 0;
                 currentApp.Log.Write(new LogMessage(String.Format("@Remote@ Found Remote! VendorID: {0}, Product ID: {1}, Description: {2}", ActiveDevice.VendorID, ActiveDevice.ProductID, ActiveDevice.Description)));
                 hidRemote.OpenDevice();
 
@@ -285,7 +290,15 @@ namespace PS3RemoteManager
 
             else
             {
-                currentApp.Log.Write(new LogMessage(String.Format("@Remote@ Remote not found.  Waiting...", timerFindRemote.Interval)));
+                missingCount += 1;
+                if (missingCount == 5)
+                {
+                    currentApp.Log.Write(new LogMessage("@Remote@ Remote not found.  Squelching further log messages until remote is found."));
+                }
+                else if (missingCount < 5)
+                {
+                    currentApp.Log.Write(new LogMessage("@Remote@ Remote not found.  Waiting..."));
+                }
                 _connected = false;
                 timerHibernate.Stop();
                 timerFindRemote.Start();

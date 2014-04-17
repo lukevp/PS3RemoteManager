@@ -1,16 +1,17 @@
 ﻿<Window x:Class="PS3RemoteManager.Settings"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="PS3 Remote Manager" Height="675" Width="995" MinHeight="675">
+        Title="PS3 Remote Manager" Height="675" Width="995" MinHeight="675" Closed="Window_Closed">
     <Grid>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="145px"></ColumnDefinition>
-            <ColumnDefinition Width="1*"></ColumnDefinition>
-        </Grid.ColumnDefinitions>
-        <Image Grid.Column="0" VerticalAlignment="Center" Source="Images\ps3_new.jpg" HorizontalAlignment="Center" />
-        <TabControl Name="SettingsTabs" Grid.Column="1" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
+        <TabControl Name="SettingsTabs" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
             <TabItem Header="Remote Configuration" Name="TabRemote">
-                <Grid Background="#FFE5E5E5"/>
+                <DataGrid Name="ConfigurationGrid" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" ItemsSource="{Binding SettingsVM.ActiveConfig.Buttons}" AutoGenerateColumns="False" CanUserAddRows="false">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="ButtonName" Width="1*" IsReadOnly="True" Binding="{Binding ButtonName}" />
+                        <DataGridTextColumn Header="Setting Description" Width="3*" IsReadOnly="True" Binding="{Binding Description}" />
+                    </DataGrid.Columns>
+                </DataGrid>
+
             </TabItem>
             <TabItem Header="Application Settings" Name="TabApp">
                 <Grid Background="#FFE5E5E5">
@@ -40,7 +41,7 @@
                 </Grid>
             </TabItem>
             <TabItem Header="Status Log" Name="TabStatus">
-                <DataGrid HorizontalAlignment="Stretch" VerticalAlignment="Stretch" ItemsSource="{Binding Log.LogMessages}" AutoGenerateColumns="False" CanUserAddRows="false">
+                <DataGrid Name="StatusLog" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" ItemsSource="{Binding Log.LogMessages}" AutoGenerateColumns="False" CanUserAddRows="false">
                     <DataGrid.Columns>
                         <DataGridTextColumn Header="Time" Width="1*" IsReadOnly="True" Binding="{Binding NiceTime}" />
                         <DataGridTextColumn Header="Log Message" Width="3*" IsReadOnly="True" Binding="{Binding Message}" />
