@@ -17,6 +17,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using WindowsInput.Native;
 
 namespace PS3RemoteManager
 {
@@ -32,6 +33,8 @@ namespace PS3RemoteManager
             this.DataContext = currentApp;
             currentApp.Log.LogChanged = logChanged;
             InitializeComponent();
+            this.KeyComboBox.ItemsSource = Enum.GetValues(typeof(VirtualKeyCode)).Cast<VirtualKeyCode>();
+            
         }
 
         private void Button_Click(object sender, RoutedEventArgs e)
@@ -83,6 +86,7 @@ namespace PS3RemoteManager
         private void Configuration_DoubleClick(object sender,
                                   System.Windows.Input.MouseButtonEventArgs e)
         {
+            /*
             IInputElement element = e.MouseDevice.DirectlyOver;
             if (element != null && element is FrameworkElement)
             {
@@ -103,7 +107,59 @@ namespace PS3RemoteManager
                         }
                     }
                 }
+            }*/
+        }
+
+        private string editingName;
+        private bool ignoreSelection = false;
+        private void ConfigurationGrid_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (e.AddedItems.Count == 0 || ignoreSelection) { return; }
+
+            var selectedItem = this.ConfigurationGrid.SelectedIndex;
+
+            if (!string.IsNullOrEmpty(editingName))
+            {
+                PS3Command newCommand = new NullCommand();
+                if (this.CommandType.SelectedIndex == 1)
+                {
+                    // Keyboard Command
+                    // TODO: change keyboard command to whatever the user chooses.
+                    VirtualKeyCode enumVal = (VirtualKeyCode)Enum.Parse(typeof(VirtualKeyCode), KeyComboBox.SelectedValue.ToString());
+                    newCommand = new KeyboardCommand(enumVal);
+                }
+                currentApp.SettingsVM.ActiveConfig.Commands[editingName] = newCommand;
+                editingName = null;
             }
+
+            string name = (e.AddedItems[0] as CommandDescriptor).Name;
+            editingName = name;
+
+            var CommandItem = currentApp.SettingsVM.ActiveConfig.Commands[name];
+            if (CommandItem is KeyboardCommand)
+            {
+                this.CommandType.SelectedIndex = 1;
+                this.KeyComboBox.SelectedValue = (CommandItem as KeyboardCommand).KeyCode;
+            }
+            else if (CommandItem is NullCommand)
+            {
+                this.CommandType.SelectedIndex = 0;
+                // TODO: bind visibility to property, would be easier.
+                this.KeyComboBox.Visibility = System.Windows.Visibility.Hidden;
+            }
+
+
+            ignoreSelection = true;
+            currentApp.SettingsVM.ActiveConfig.RefreshView();
+            this.ConfigurationGrid.UpdateLayout();
+            this.ConfigurationGrid.SelectedIndex = selectedItem;
+            this.ConfigurationGrid.UpdateLayout();
+            ignoreSelection = false;
+            /*else if (CommandItem is ProgramCommand)
+            {
+                this.CommandType.SelectedIndex = 2;
+            }
+            }*/
         }
     }
 

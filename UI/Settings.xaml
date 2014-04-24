@@ -5,12 +5,40 @@
     <Grid>
         <TabControl Name="SettingsTabs" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
             <TabItem Header="Remote Configuration" Name="TabRemote">
-                <DataGrid MouseDoubleClick="Configuration_DoubleClick" Name="ConfigurationGrid" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" ItemsSource="{Binding SettingsVM.ActiveConfig.ButtonInfo}" AutoGenerateColumns="False" CanUserAddRows="false">
-                    <DataGrid.Columns>
-                        <DataGridTextColumn Header="ButtonName" Width="1*" IsReadOnly="True" Binding="{Binding Name}" />
-                        <DataGridTextColumn Header="Setting Description" Width="3*" IsReadOnly="True" Binding="{Binding Description}" />
-                    </DataGrid.Columns>
-                </DataGrid>
+                
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="1*"></ColumnDefinition>
+                        <ColumnDefinition Width="300px"></ColumnDefinition>
+                    </Grid.ColumnDefinitions>
+                    <DataGrid Grid.Column="0" MouseDoubleClick="Configuration_DoubleClick" Name="ConfigurationGrid" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" ItemsSource="{Binding SettingsVM.ActiveConfig.ButtonInfo}" AutoGenerateColumns="False" CanUserAddRows="false" SelectionChanged="ConfigurationGrid_SelectionChanged">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="ButtonName" Width="1*" IsReadOnly="True" Binding="{Binding Name}" />
+                            <DataGridTextColumn Header="Setting Description" Width="3*" IsReadOnly="True" Binding="{Binding Description}" />
+                        </DataGrid.Columns>
+                    </DataGrid>
+                    <Grid Grid.Column="1">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="30px"></RowDefinition>
+                            <RowDefinition Height="50px"></RowDefinition>
+                            <RowDefinition Height="30px"></RowDefinition>
+                            <RowDefinition Height="50px"></RowDefinition>
+                            <RowDefinition Height="30px"></RowDefinition>
+                            <RowDefinition Height="50px"></RowDefinition>
+                        </Grid.RowDefinitions>
+                        <Label Grid.Row="0" Content="Command Type" HorizontalAlignment="Center" VerticalAlignment="Bottom"/>
+                        <ComboBox Name="CommandType" Grid.Row="1" HorizontalAlignment="Center" VerticalAlignment="Top" Width="175">
+                            <ComboBoxItem Content="None" IsSelected="True" />
+                            <ComboBoxItem Content="Keyboard" />
+                            <ComboBoxItem Content="Program" />
+                        </ComboBox>
+                        <!-- program items -->
+                        <Label Grid.Row="2" Content="Program Path" HorizontalAlignment="Center" VerticalAlignment="Bottom"></Label>
+                        <!-- keyboard items -->
+                        <Label Content="Key Binding" HorizontalAlignment="Center" Grid.Row="4" VerticalAlignment="Bottom"/>
+                        <ComboBox Name="KeyComboBox" Grid.Column="1" Grid.Row="5" Width="175px" Height="25px" VerticalAlignment="Top"></ComboBox>
+                    </Grid>
+                </Grid>
 
             </TabItem>
             <TabItem Header="Application Settings" Name="TabApp">
