@@ -104,6 +104,10 @@
     <Compile Include="Models\ButtonConfigModel.cs" />
     <Compile Include="DeviceInteraction\RemoteSleep.cs" />
     <Compile Include="Models\SettingsModel.cs" />
+    <Page Include="UI\CommandConfig.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="UI\NotifyIconResources.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -128,6 +132,9 @@
     <Compile Include="Libs\HidDevices.cs" />
     <Compile Include="Libs\HidReport.cs" />
     <Compile Include="Libs\NativeMethods.cs" />
+    <Compile Include="UI\CommandConfig.xaml.cs">
+      <DependentUpon>CommandConfig.xaml</DependentUpon>
+    </Compile>
     <Compile Include="UI\Settings.xaml.cs">
       <DependentUpon>Settings.xaml</DependentUpon>
       <SubType>Code</SubType>

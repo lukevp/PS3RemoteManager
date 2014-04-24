@@ -12,6 +12,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Threading;
 using WindowsInput;
 using WindowsInput.Native;
 
@@ -28,6 +29,9 @@ namespace PS3RemoteManager
         // Used for the hibernate functionality
         public BackgroundWorker bw = new BackgroundWorker();
 
+        // for keyrepeat
+        public DispatcherTimer timerRepeat = new DispatcherTimer();
+
         // The tray icon
         public TaskbarIcon NotifyIcon;
 
@@ -35,12 +39,9 @@ namespace PS3RemoteManager
         public RemoteSleep RemoteSleep;
 
         // Logging to file and to the UI
-        private DebugLog _log = new DebugLog();
-        public DebugLog Log { get { return _log; } set { _log = value; } }
+        public DebugLog Log { get; set; }
 
-        // Settings for the application
-        private SettingsModel _settingsVM;
-        public SettingsModel SettingsVM { get { return _settingsVM; } set { _settingsVM = value; } }
+        public SettingsModel SettingsVM { get; set; }
 
 
         public InputSimulator vKeyboard = new InputSimulator();
@@ -62,6 +63,7 @@ namespace PS3RemoteManager
                 Log.Write(new LogMessage(String.Format("PS3 Bluetooth Remote Battery is currently at {0}%.", batteryLife), DebugLevel.BALLOON));
             }
         }
+        private KeyboardCommand heldButton = null;
 
         private Icon iconDisconnected = new Icon("Resources/Icon Disconnected.ico");
         private Icon iconConnected = new Icon("Resources/Icon Connected.ico");
@@ -80,17 +82,36 @@ namespace PS3RemoteManager
         }
         private void buttonDown(PS3Remote.Button b)
         {
-            //Log.Write(new LogMessage("Button Pressed: "+ b.Name));
-            var command = this.SettingsVM.ActiveConfig.Commands.Where(x => x.ButtonName == b.Name).First();
+            // todo: guard against issues w/ this
+
+            var command = this.SettingsVM.ActiveConfigCommands.Where(x => x.ButtonName == b.Name).First();
             if (command != null)
             {
-                command.Exec(this);
+                command.ButtonPress(this);
+                if (command is KeyboardCommand)
+                {
+                    KeyboardCommand buttonCommand = command as KeyboardCommand;
+                    if (buttonCommand.KeyRepeat != null)
+                    {
+                        heldButton = buttonCommand;
+                        timerRepeat.Interval = TimeSpan.FromMilliseconds(buttonCommand.InitialWait); // gated repeat - first repeat is minimum of 750 ms to prevent unnecessary repeats.
+                        timerRepeat.Start();
+                    }
+                }
             }
-
         }
         private void buttonUp(PS3Remote.Button b)
         {
-            //Log.Write(new LogMessage("Button Released: " + b.Name));
+            heldButton = null;
+            timerRepeat.Stop();
+        }
+
+
+        
+        private void TimerRepeat_Elapsed(object sender, EventArgs e)
+        {
+            heldButton.ButtonPress(this);
+            timerRepeat.Interval = TimeSpan.FromMilliseconds(Convert.ToDouble(heldButton.KeyRepeat));
         }
 
         protected override void OnStartup(StartupEventArgs e)
@@ -108,11 +129,16 @@ namespace PS3RemoteManager
 
                 Environment.Exit(0);
             }
-            
+            // setup repeat timer
+            timerRepeat.Tick += new EventHandler(TimerRepeat_Elapsed);
+
             //create the notifyicon (it's a resource declared in NotifyIconResources.xaml)
             NotifyIcon = (TaskbarIcon)FindResource("NotifyIcon");
 
+            NotifyIcon.Icon = iconDisconnected;
+            NotifyIcon.ToolTipText = "Searching for Remote...";
 
+            Log = new DebugLog();
             Log.Write(new LogMessage("Searching for PS3 Bluetooth Remote...", DebugLevel.BALLOON));
             Remote = new PS3Remote();
             Remote.BatteryLifeChanged = new PS3Remote.batteryDelegate(this.batteryLifeChanged);

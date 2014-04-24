@@ -1,7 +1,9 @@
 ﻿using Newtonsoft.Json;
+using PS3RemoteManager.UI;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Data;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -76,6 +78,31 @@ namespace PS3RemoteManager
         private void Window_Closed(object sender, EventArgs e)
         {
             currentApp.Log.LogChanged = null;
+        }
+
+        private void Configuration_DoubleClick(object sender,
+                                  System.Windows.Input.MouseButtonEventArgs e)
+        {
+            IInputElement element = e.MouseDevice.DirectlyOver;
+            if (element != null && element is FrameworkElement)
+            {
+                if (((FrameworkElement)element).Parent is DataGridCell)
+                {
+                    var grid = sender as DataGrid;
+                    if (grid != null && grid.SelectedItems != null
+                        && grid.SelectedItems.Count == 1)
+                    {
+                        var rowItem = grid.SelectedItem as PS3Command;
+                        CommandConfig newWin = new CommandConfig();
+                        newWin.CommandItem = rowItem;
+                        var result = newWin.ShowDialog();
+                        if (result.HasValue && result.Value)
+                        {
+                            grid.SelectedItem = newWin.CommandItem;
+                        }
+                    }
+                }
+            }
         }
     }
 
