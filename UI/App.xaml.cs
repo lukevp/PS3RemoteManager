@@ -64,6 +64,7 @@ namespace PS3RemoteManager
             }
         }
         private KeyboardCommand heldButton = null;
+        private string heldButtonName = null;
 
         private Icon iconDisconnected = new Icon("Resources/Icon Disconnected.ico");
         private Icon iconConnected = new Icon("Resources/Icon Connected.ico");
@@ -83,17 +84,18 @@ namespace PS3RemoteManager
         private void buttonDown(PS3Remote.Button b)
         {
             // todo: guard against issues w/ this
-
-            var command = this.SettingsVM.ActiveConfigCommands.Where(x => x.ButtonName == b.Name).First();
+            PS3Command command = null;
+            var found = this.SettingsVM.ActiveConfig.Commands.TryGetValue(b.Name, out command);
             if (command != null)
             {
-                command.ButtonPress(this);
+                command.ButtonPress(this, b.Name);
                 if (command is KeyboardCommand)
                 {
                     KeyboardCommand buttonCommand = command as KeyboardCommand;
                     if (buttonCommand.KeyRepeat != null)
                     {
                         heldButton = buttonCommand;
+                        heldButtonName = b.Name;
                         timerRepeat.Interval = TimeSpan.FromMilliseconds(buttonCommand.InitialWait); // gated repeat - first repeat is minimum of 750 ms to prevent unnecessary repeats.
                         timerRepeat.Start();
                     }
@@ -110,7 +112,7 @@ namespace PS3RemoteManager
         
         private void TimerRepeat_Elapsed(object sender, EventArgs e)
         {
-            heldButton.ButtonPress(this);
+            heldButton.ButtonPress(this, heldButtonName);
             timerRepeat.Interval = TimeSpan.FromMilliseconds(Convert.ToDouble(heldButton.KeyRepeat));
         }
 

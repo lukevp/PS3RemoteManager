@@ -11,6 +11,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
+using WindowsInput.Native;
 
 namespace PS3RemoteManager.UI
 {
@@ -30,23 +31,26 @@ namespace PS3RemoteManager.UI
             if (this.CommandType.SelectedIndex == 0)
             {
                 // None command
-                this.CommandItem = new NullCommand(this.CommandItem.ButtonName);
+                this.CommandItem = new NullCommand();
             }
             else if (this.CommandType.SelectedIndex == 1)
             {
                 // Keyboard Command
-                this.CommandItem = new KeyboardCommand(this.CommandItem.ButtonName, WindowsInput.Native.VirtualKeyCode.ADD);
+                // TODO: change keyboard command to whatever the user chooses.
+                VirtualKeyCode enumVal = (VirtualKeyCode)Enum.Parse(typeof(VirtualKeyCode), KeyComboBox.SelectedValue.ToString());
+                this.CommandItem = new KeyboardCommand(enumVal);
             }
             this.DialogResult = true;
 
-            //this
         }
 
         private void Window_Loaded_1(object sender, RoutedEventArgs e)
         {
+            this.KeyComboBox.ItemsSource = Enum.GetValues(typeof(WindowsInput.Native.VirtualKeyCode)).Cast<WindowsInput.Native.VirtualKeyCode>();
             if (CommandItem is KeyboardCommand)
             {
                 this.CommandType.SelectedIndex = 1;
+                this.KeyComboBox.SelectedValue = (this.CommandItem as KeyboardCommand).KeyCode;
             }
             else
             {

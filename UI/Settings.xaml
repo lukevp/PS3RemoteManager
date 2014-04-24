@@ -5,9 +5,9 @@
     <Grid>
         <TabControl Name="SettingsTabs" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
             <TabItem Header="Remote Configuration" Name="TabRemote">
-                <DataGrid MouseDoubleClick="Configuration_DoubleClick" Name="ConfigurationGrid" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" ItemsSource="{Binding SettingsVM.ActiveConfig.Commands}" AutoGenerateColumns="False" CanUserAddRows="false">
+                <DataGrid MouseDoubleClick="Configuration_DoubleClick" Name="ConfigurationGrid" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" ItemsSource="{Binding SettingsVM.ActiveConfig.ButtonInfo}" AutoGenerateColumns="False" CanUserAddRows="false">
                     <DataGrid.Columns>
-                        <DataGridTextColumn Header="ButtonName" Width="1*" IsReadOnly="True" Binding="{Binding ButtonName}" />
+                        <DataGridTextColumn Header="ButtonName" Width="1*" IsReadOnly="True" Binding="{Binding Name}" />
                         <DataGridTextColumn Header="Setting Description" Width="3*" IsReadOnly="True" Binding="{Binding Description}" />
                     </DataGrid.Columns>
                 </DataGrid>

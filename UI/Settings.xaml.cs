@@ -92,13 +92,14 @@ namespace PS3RemoteManager
                     if (grid != null && grid.SelectedItems != null
                         && grid.SelectedItems.Count == 1)
                     {
-                        var rowItem = grid.SelectedItem as PS3Command;
+                        var rowItem = grid.SelectedItem as CommandDescriptor;
                         CommandConfig newWin = new CommandConfig();
-                        newWin.CommandItem = rowItem;
+                        newWin.CommandItem = currentApp.SettingsVM.ActiveConfig.Commands[rowItem.Name];
                         var result = newWin.ShowDialog();
                         if (result.HasValue && result.Value)
                         {
-                            grid.SelectedItem = newWin.CommandItem;
+                            currentApp.SettingsVM.ActiveConfig.Commands[(grid.SelectedItem as CommandDescriptor).Name] = newWin.CommandItem;
+                            currentApp.SettingsVM.ActiveConfig.RefreshView();
                         }
                     }
                 }
