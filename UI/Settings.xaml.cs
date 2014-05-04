@@ -1,5 +1,4 @@
 ﻿using Newtonsoft.Json;
-using PS3RemoteManager.UI;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -33,7 +32,7 @@ namespace PS3RemoteManager
             this.DataContext = currentApp;
             currentApp.Log.LogChanged = logChanged;
             InitializeComponent();
-            this.KeyComboBox.ItemsSource = Enum.GetValues(typeof(VirtualKeyCode)).Cast<VirtualKeyCode>();
+            this.KeyBinding.ItemsSource = Enum.GetValues(typeof(VirtualKeyCode)).Cast<VirtualKeyCode>();
             
         }
 
@@ -110,56 +109,54 @@ namespace PS3RemoteManager
             }*/
         }
 
-        private string editingName;
-        private bool ignoreSelection = false;
-        private void ConfigurationGrid_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            if (e.AddedItems.Count == 0 || ignoreSelection) { return; }
 
-            var selectedItem = this.ConfigurationGrid.SelectedIndex;
+        private string editingName;
+
+        private void ConfigurationGrid_SelectionChanged_1(object sender, SelectionChangedEventArgs e)
+        {
+            if (e.AddedItems.Count == 0) { return; }
+
+            var selectedItem = this.ConfigurationGrid.SelectedItem;
 
             if (!string.IsNullOrEmpty(editingName))
             {
-                PS3Command newCommand = new NullCommand();
+                PS3Command newCommand = new NullCommand(editingName);
                 if (this.CommandType.SelectedIndex == 1)
                 {
                     // Keyboard Command
                     // TODO: change keyboard command to whatever the user chooses.
-                    VirtualKeyCode enumVal = (VirtualKeyCode)Enum.Parse(typeof(VirtualKeyCode), KeyComboBox.SelectedValue.ToString());
-                    newCommand = new KeyboardCommand(enumVal);
+                    VirtualKeyCode enumVal = (VirtualKeyCode)Enum.Parse(typeof(VirtualKeyCode), KeyBinding.SelectedValue.ToString());
+                    newCommand = new KeyboardCommand(editingName, enumVal);
                 }
-                currentApp.SettingsVM.ActiveConfig.Commands[editingName] = newCommand;
+                currentApp.SettingsVM.ActiveConfig.UpdateCommand(newCommand);
                 editingName = null;
             }
 
-            string name = (e.AddedItems[0] as CommandDescriptor).Name;
+            string name = (e.AddedItems[0] as PS3Command).ButtonName;
             editingName = name;
 
-            var CommandItem = currentApp.SettingsVM.ActiveConfig.Commands[name];
+            var CommandItem = selectedItem;
             if (CommandItem is KeyboardCommand)
             {
                 this.CommandType.SelectedIndex = 1;
-                this.KeyComboBox.SelectedValue = (CommandItem as KeyboardCommand).KeyCode;
+                this.KeyBinding.SelectedValue = (CommandItem as KeyboardCommand).KeyCode;
+                this.KeyLabel.Visibility = this.KeyBinding.Visibility = System.Windows.Visibility.Visible;
+                this.ProgramPath.Visibility = this.ProgramLabel.Visibility = System.Windows.Visibility.Hidden;
             }
             else if (CommandItem is NullCommand)
             {
                 this.CommandType.SelectedIndex = 0;
-                // TODO: bind visibility to property, would be easier.
-                this.KeyComboBox.Visibility = System.Windows.Visibility.Hidden;
+                this.KeyLabel.Visibility = this.KeyBinding.Visibility = System.Windows.Visibility.Hidden;
+                this.ProgramPath.Visibility = this.ProgramLabel.Visibility = System.Windows.Visibility.Hidden;
             }
 
-
-            ignoreSelection = true;
-            currentApp.SettingsVM.ActiveConfig.RefreshView();
-            this.ConfigurationGrid.UpdateLayout();
-            this.ConfigurationGrid.SelectedIndex = selectedItem;
-            this.ConfigurationGrid.UpdateLayout();
-            ignoreSelection = false;
-            /*else if (CommandItem is ProgramCommand)
+            else if (CommandItem is ProgramCommand)
             {
                 this.CommandType.SelectedIndex = 2;
+                this.ProgramPath.Visibility = this.ProgramLabel.Visibility = System.Windows.Visibility.Visible;
+                this.KeyLabel.Visibility = this.KeyBinding.Visibility = System.Windows.Visibility.Hidden;
             }
-            }*/
+
         }
     }
 

@@ -84,8 +84,7 @@ namespace PS3RemoteManager
         private void buttonDown(PS3Remote.Button b)
         {
             // todo: guard against issues w/ this
-            PS3Command command = null;
-            var found = this.SettingsVM.ActiveConfig.Commands.TryGetValue(b.Name, out command);
+            PS3Command command = this.SettingsVM.ActiveConfig.GetCommand(b.Name);
             if (command != null)
             {
                 command.ButtonPress(this, b.Name);

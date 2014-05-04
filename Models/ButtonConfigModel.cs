@@ -1,7 +1,9 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -14,6 +16,7 @@ namespace PS3RemoteManager
     {
         public abstract void ButtonPress(App app, string buttonName);
         public abstract string Description { get; }
+        public string ButtonName { get; set; }
     }
 
     public class KeyboardCommand : PS3Command
@@ -22,8 +25,9 @@ namespace PS3RemoteManager
         public int? KeyRepeat;
         public int InitialWait;
 
-        public KeyboardCommand(VirtualKeyCode code, int? keyRepeat = null, int initialWait = 500)
+        public KeyboardCommand(string buttonName, VirtualKeyCode code, int? keyRepeat = null, int initialWait = 500)
         {
+            this.ButtonName = buttonName;
             this.KeyCode = code;
             this.InitialWait = initialWait;
             this.KeyRepeat = keyRepeat;
@@ -42,6 +46,11 @@ namespace PS3RemoteManager
     }
     public class NullCommand : PS3Command
     {
+        public NullCommand(string buttonName)
+        {
+            this.ButtonName = buttonName;
+        }
+
         public override void ButtonPress(App app, string buttonName)
         {
             app.Log.Write("Button Pressed with no Config Setting: " + buttonName);
@@ -51,20 +60,30 @@ namespace PS3RemoteManager
             get { return ""; }
         }
     }
-    public class CommandDescriptor
+
+    public class ProgramCommand : PS3Command
     {
-        public string Description {get; set; }
-        public string Name {get; set; }
-        public CommandDescriptor(string name, string desc)
+        public ProgramCommand(string buttonName, string progPath=null)
         {
-            this.Name = name;
-            this.Description = desc;
+            this.ButtonName = buttonName;
+            this.ProgPath = progPath;
+        }
+        public string ProgPath { get; set; }
+
+        public override void ButtonPress(App app, string buttonName)
+        {
+            app.Log.Write("Button Pressed with no Config Setting: " + buttonName);
+        }
+        public override string Description
+        {
+            get { return "Program: " + ProgPath; }
         }
     }
 
+
     public class ButtonConfigModel : INotifyPropertyChanged
     {
-
+        
         public event PropertyChangedEventHandler PropertyChanged;
 
         protected void OnPropertyChanged(string name)
@@ -76,85 +95,98 @@ namespace PS3RemoteManager
             }
         }
 
-        public void RefreshView()
-        {
-            OnPropertyChanged("ButtonInfo");
-        }
-
-        public Dictionary<string, PS3Command> Commands = new Dictionary<string, PS3Command>();
         public List<string> ValidButtons = new List<string>() { "Num_1", "Num_2", "Num_3", "Num_4", "Num_5", "Num_6", "Num_7", "Num_8", "Num_9", "Num_0", "Dash_Slash_Dash_Dash", "Return", "Clear", "Channel_Up", "Channel_Down", "Eject", "Top_Menu", "Time", "Prev", "Next", "Play", "Scan_Back", "Scan_Forward", "Stop", "Pause", "PopUp_Menu", "Step_Back", "Step_Forward", "Subtitle", "Audio", "Angle", "Display", "Instant_Forward", "Instant_Back", "Blue", "Red", "Green", "Yellow", "Playstation", "Enter", "L2", "R2", "L1", "R1", "Triangle", "Circle", "Cross", "Square", "Select", "L3", "R3", "Start", "Arrow_Up", "Arrow_Right", "Arrow_Down", "Arrow_Left" };
 
-        public List<CommandDescriptor> ButtonInfo
+        public ObservableCollection<PS3Command> Commands { get; set; }
+
+        public void UpdateCommand(PS3Command command)
         {
-            get
+            for (int i = 0; i < Commands.Count; i++)
             {
-                List<CommandDescriptor> temp = new List<CommandDescriptor>();
-                foreach (var button in ValidButtons)
+                if (Commands[i].ButtonName == command.ButtonName)
                 {
-                    temp.Add(new CommandDescriptor(button, Commands[button].Description));
+                    Commands[i] = command;
                 }
-                return temp;
             }
+        }
+
+        public PS3Command GetCommand(string name)
+        {
+            for (int i = 0; i < Commands.Count; i++)
+            {
+                if (Commands[i].ButtonName == name)
+                {
+                    return Commands[i];
+                }
+            }
+            return null;
+        }
+
+        public void SaveConfigModel()
+        {
+            // TODO: ask where to save.
+            File.WriteAllText("ButtonConfig.json", JsonConvert.SerializeObject(this));
         }
 
         public ButtonConfigModel()
         {
-            Commands["Num_1"] = new KeyboardCommand(VirtualKeyCode.NUMPAD1);
-            Commands["Num_2"] = new KeyboardCommand(VirtualKeyCode.NUMPAD2);
-            Commands["Num_3"] = new KeyboardCommand(VirtualKeyCode.NUMPAD3);
-            Commands["Num_4"] = new KeyboardCommand(VirtualKeyCode.NUMPAD4);
-            Commands["Num_5"] = new KeyboardCommand(VirtualKeyCode.NUMPAD5);
-            Commands["Num_6"] = new KeyboardCommand(VirtualKeyCode.NUMPAD6);
-            Commands["Num_7"] = new KeyboardCommand(VirtualKeyCode.NUMPAD7);
-            Commands["Num_8"] = new KeyboardCommand(VirtualKeyCode.NUMPAD8);
-            Commands["Num_9"] = new KeyboardCommand(VirtualKeyCode.NUMPAD9);
-            Commands["Num_0"] = new KeyboardCommand(VirtualKeyCode.NUMPAD0);
-            Commands["Dash_Slash_Dash_Dash"] = new KeyboardCommand(VirtualKeyCode.VOLUME_MUTE);
-            Commands["Return"] = new KeyboardCommand(VirtualKeyCode.ESCAPE);
-            Commands["Clear"] = new KeyboardCommand(VirtualKeyCode.DELETE);
-            Commands["Channel_Up"] = new KeyboardCommand(VirtualKeyCode.VOLUME_UP, 50);
-            Commands["Channel_Down"] = new KeyboardCommand(VirtualKeyCode.VOLUME_DOWN, 50);
-            Commands["Eject"] = new KeyboardCommand(VirtualKeyCode.VK_E);
-            Commands["Top_Menu"] = new KeyboardCommand(VirtualKeyCode.VK_S);
-            Commands["Time"] = new KeyboardCommand(VirtualKeyCode.OEM_3);
-            Commands["Prev"] = new KeyboardCommand(VirtualKeyCode.PRIOR);
-            Commands["Next"] = new KeyboardCommand(VirtualKeyCode.NEXT);
-            Commands["Play"] = new KeyboardCommand(VirtualKeyCode.PLAY);
-            Commands["Scan_Back"] = new KeyboardCommand(VirtualKeyCode.VK_R);
-            Commands["Scan_Forward"] = new KeyboardCommand(VirtualKeyCode.VK_F);
-            Commands["Stop"] = new KeyboardCommand(VirtualKeyCode.MEDIA_STOP);
-            Commands["Pause"] = new KeyboardCommand(VirtualKeyCode.PAUSE);
-            Commands["PopUp_Menu"] = new KeyboardCommand(VirtualKeyCode.VK_M);
-            Commands["Step_Back"] = new KeyboardCommand(VirtualKeyCode.OEM_COMMA);
-            Commands["Step_Forward"] = new KeyboardCommand(VirtualKeyCode.OEM_PERIOD);
-            Commands["Subtitle"] = new KeyboardCommand(VirtualKeyCode.VK_T);
-            Commands["Audio"] = new KeyboardCommand(VirtualKeyCode.VK_A);
-            Commands["Angle"] = new KeyboardCommand(VirtualKeyCode.VK_Z);
-	        Commands["Display"] = new KeyboardCommand(VirtualKeyCode.VK_I);
-            Commands["Instant_Forward"] = new NullCommand();
-            Commands["Instant_Back"] = new NullCommand();
-            Commands["Blue"] = new KeyboardCommand(VirtualKeyCode.F9);
-            Commands["Red"] = new KeyboardCommand(VirtualKeyCode.F7);
-            Commands["Green"] = new KeyboardCommand(VirtualKeyCode.F8);
-            Commands["Yellow"] = new KeyboardCommand(VirtualKeyCode.F10);
-            Commands["Playstation"] = new NullCommand();
-            Commands["Enter"] = new KeyboardCommand(VirtualKeyCode.RETURN);
-            Commands["L2"] = new KeyboardCommand(VirtualKeyCode.F2);
-            Commands["R2"] = new KeyboardCommand(VirtualKeyCode.F5);
-            Commands["L1"] = new KeyboardCommand(VirtualKeyCode.F1);
-            Commands["R1"] = new KeyboardCommand(VirtualKeyCode.F4);
-            Commands["Triangle"] = new KeyboardCommand(VirtualKeyCode.VK_C);
-            Commands["Circle"] = new KeyboardCommand(VirtualKeyCode.BACK);
-            Commands["Cross"] = new KeyboardCommand(VirtualKeyCode.SPACE);
-            Commands["Square"] = new KeyboardCommand(VirtualKeyCode.TAB);
-            Commands["Select"] = new KeyboardCommand(VirtualKeyCode.INSERT);
-            Commands["L3"] = new KeyboardCommand(VirtualKeyCode.F3);
-            Commands["R3"] = new KeyboardCommand(VirtualKeyCode.F6);
-            Commands["Start"] = new KeyboardCommand(VirtualKeyCode.HOME);
-            Commands["Arrow_Up"] = new KeyboardCommand(VirtualKeyCode.UP, 100, 1000);
-            Commands["Arrow_Right"] = new KeyboardCommand(VirtualKeyCode.RIGHT, 100, 1000);
-            Commands["Arrow_Down"] = new KeyboardCommand(VirtualKeyCode.DOWN, 100, 1000);
-            Commands["Arrow_Left"] = new KeyboardCommand(VirtualKeyCode.LEFT, 100, 1000);
+            Commands = new ObservableCollection<PS3Command>();
+            Commands.Add(new KeyboardCommand("Num_1", VirtualKeyCode.NUMPAD1));
+            Commands.Add(new KeyboardCommand("Num_2", VirtualKeyCode.NUMPAD2));
+            Commands.Add(new KeyboardCommand("Num_3", VirtualKeyCode.NUMPAD3));
+            Commands.Add(new KeyboardCommand("Num_4", VirtualKeyCode.NUMPAD4));
+            Commands.Add(new KeyboardCommand("Num_5", VirtualKeyCode.NUMPAD5));
+            Commands.Add(new KeyboardCommand("Num_6", VirtualKeyCode.NUMPAD6));
+            Commands.Add(new KeyboardCommand("Num_7", VirtualKeyCode.NUMPAD7));
+            Commands.Add(new KeyboardCommand("Num_8", VirtualKeyCode.NUMPAD8));
+            Commands.Add(new KeyboardCommand("Num_9", VirtualKeyCode.NUMPAD9));
+            Commands.Add(new KeyboardCommand("Num_0", VirtualKeyCode.NUMPAD0));
+            Commands.Add(new KeyboardCommand("Dash_Slash_Dash_Dash", VirtualKeyCode.VOLUME_MUTE));
+            Commands.Add(new KeyboardCommand("Return", VirtualKeyCode.ESCAPE));
+            Commands.Add(new KeyboardCommand("Clear", VirtualKeyCode.DELETE));
+            Commands.Add(new KeyboardCommand("Channel_Up", VirtualKeyCode.VOLUME_UP, 50));
+            Commands.Add(new KeyboardCommand("Channel_Down", VirtualKeyCode.VOLUME_DOWN, 50));
+            Commands.Add(new KeyboardCommand("Eject", VirtualKeyCode.VK_E));
+            Commands.Add(new KeyboardCommand("Top_Menu", VirtualKeyCode.VK_S));
+            Commands.Add(new KeyboardCommand("Time", VirtualKeyCode.OEM_3));
+            Commands.Add(new KeyboardCommand("Prev", VirtualKeyCode.PRIOR));
+            Commands.Add(new KeyboardCommand("Next", VirtualKeyCode.NEXT));
+            Commands.Add(new KeyboardCommand("Play", VirtualKeyCode.PLAY));
+            Commands.Add(new KeyboardCommand("Scan_Back", VirtualKeyCode.VK_R));
+            Commands.Add(new KeyboardCommand("Scan_Forward", VirtualKeyCode.VK_F));
+            Commands.Add(new KeyboardCommand("Stop", VirtualKeyCode.MEDIA_STOP));
+            Commands.Add(new KeyboardCommand("Pause", VirtualKeyCode.PAUSE));
+            Commands.Add(new KeyboardCommand("PopUp_Menu", VirtualKeyCode.VK_M));
+            Commands.Add(new KeyboardCommand("Step_Back", VirtualKeyCode.OEM_COMMA));
+            Commands.Add(new KeyboardCommand("Step_Forward", VirtualKeyCode.OEM_PERIOD));
+            Commands.Add(new KeyboardCommand("Subtitle", VirtualKeyCode.VK_T));
+            Commands.Add(new KeyboardCommand("Audio", VirtualKeyCode.VK_A));
+            Commands.Add(new KeyboardCommand("Angle", VirtualKeyCode.VK_Z));
+	        Commands.Add(new KeyboardCommand("Display", VirtualKeyCode.VK_I));
+            Commands.Add(new NullCommand("Instant_Forward"));
+            Commands.Add(new NullCommand("Instant_Back"));
+            Commands.Add(new KeyboardCommand("Blue", VirtualKeyCode.F9));
+            Commands.Add(new KeyboardCommand("Red", VirtualKeyCode.F7));
+            Commands.Add(new KeyboardCommand("Green", VirtualKeyCode.F8));
+            Commands.Add(new KeyboardCommand("Yellow", VirtualKeyCode.F10));
+            Commands.Add(new NullCommand("Playstation"));
+            Commands.Add(new KeyboardCommand("Enter", VirtualKeyCode.RETURN));
+            Commands.Add(new KeyboardCommand("L2", VirtualKeyCode.F2));
+            Commands.Add(new KeyboardCommand("R2", VirtualKeyCode.F5));
+            Commands.Add(new KeyboardCommand("L1", VirtualKeyCode.F1));
+            Commands.Add(new KeyboardCommand("R1", VirtualKeyCode.F4));
+            Commands.Add(new KeyboardCommand("Triangle", VirtualKeyCode.VK_C));
+            Commands.Add(new KeyboardCommand("Circle", VirtualKeyCode.BACK));
+            Commands.Add(new KeyboardCommand("Cross", VirtualKeyCode.SPACE));
+            Commands.Add(new KeyboardCommand("Square", VirtualKeyCode.TAB));
+            Commands.Add(new KeyboardCommand("Select", VirtualKeyCode.INSERT));
+            Commands.Add(new KeyboardCommand("L3", VirtualKeyCode.F3));
+            Commands.Add(new KeyboardCommand("R3", VirtualKeyCode.F6));
+            Commands.Add(new KeyboardCommand("Start", VirtualKeyCode.HOME));
+            Commands.Add(new KeyboardCommand("Arrow_Up", VirtualKeyCode.UP, 100, 1000));
+            Commands.Add(new KeyboardCommand("Arrow_Right", VirtualKeyCode.RIGHT, 100, 1000));
+            Commands.Add(new KeyboardCommand("Arrow_Down", VirtualKeyCode.DOWN, 100, 1000));
+            Commands.Add(new KeyboardCommand("Arrow_Left", VirtualKeyCode.LEFT, 100, 1000));
         }
             
     }

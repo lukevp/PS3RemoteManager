@@ -3,6 +3,9 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="PS3 Remote Manager" Height="675" Width="995" MinHeight="675" Closed="Window_Closed">
     <Grid>
+        <Grid.Resources>
+            <BooleanToVisibilityConverter x:Key="BoolToVisConverter" />
+        </Grid.Resources>
         <TabControl Name="SettingsTabs" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
             <TabItem Header="Remote Configuration" Name="TabRemote">
                 
@@ -11,12 +14,21 @@
                         <ColumnDefinition Width="1*"></ColumnDefinition>
                         <ColumnDefinition Width="300px"></ColumnDefinition>
                     </Grid.ColumnDefinitions>
-                    <DataGrid Grid.Column="0" MouseDoubleClick="Configuration_DoubleClick" Name="ConfigurationGrid" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" ItemsSource="{Binding SettingsVM.ActiveConfig.ButtonInfo}" AutoGenerateColumns="False" CanUserAddRows="false" SelectionChanged="ConfigurationGrid_SelectionChanged">
+                    <ListView  Name="ConfigurationGrid" Grid.Column="0" Height="Auto" Width="Auto" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" ItemsSource="{Binding SettingsVM.ActiveConfig.Commands}" SelectionChanged="ConfigurationGrid_SelectionChanged_1">
+                        <ListView.View>
+                            <GridView>
+                                <GridViewColumn Header="Button Name" Width="150px" DisplayMemberBinding="{Binding ButtonName}"/>
+                                <GridViewColumn Header="Setting Description" Width="450px" DisplayMemberBinding="{Binding Description}"/>
+                            </GridView>
+                        </ListView.View>
+                    </ListView>
+                    <!--
+                    <DataGrid Grid.Column="0" MouseDoubleClick="Configuration_DoubleClick" Name="ConfigurationGrid" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" ItemsSource="{Binding SettingsVM.ActiveConfig.Commands}" AutoGenerateColumns="False" CanUserAddRows="false" SelectionChanged="ConfigurationGrid_SelectionChanged" EnableRowVirtualization="False" IsReadOnly="True" Margin="252,0,0,0">
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="ButtonName" Width="1*" IsReadOnly="True" Binding="{Binding Name}" />
+                            <DataGridTextColumn Header="ButtonName" Width="1*" IsReadOnly="True" Binding="{Binding ButtonName}" />
                             <DataGridTextColumn Header="Setting Description" Width="3*" IsReadOnly="True" Binding="{Binding Description}" />
                         </DataGrid.Columns>
-                    </DataGrid>
+                    </DataGrid>-->
                     <Grid Grid.Column="1">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="30px"></RowDefinition>
@@ -33,10 +45,12 @@
                             <ComboBoxItem Content="Program" />
                         </ComboBox>
                         <!-- program items -->
-                        <Label Grid.Row="2" Content="Program Path" HorizontalAlignment="Center" VerticalAlignment="Bottom"></Label>
+                        <Label Grid.Row="2" Content="Program Path" Name="ProgramLabel" HorizontalAlignment="Center" VerticalAlignment="Bottom"></Label>
+                        <TextBox Name="ProgramPath" Grid.Column="1" Grid.Row="3" Margin="10,0,10,20"></TextBox>
                         <!-- keyboard items -->
-                        <Label Content="Key Binding" HorizontalAlignment="Center" Grid.Row="4" VerticalAlignment="Bottom"/>
-                        <ComboBox Name="KeyComboBox" Grid.Column="1" Grid.Row="5" Width="175px" Height="25px" VerticalAlignment="Top"></ComboBox>
+                        <Label Name="KeyLabel" Content="Key Binding" HorizontalAlignment="Center" Grid.Row="4" VerticalAlignment="Bottom"/>
+                        <ComboBox Name="KeyBinding" Grid.Column="1" Grid.Row="5" Width="175px" Height="25px" VerticalAlignment="Top"
+                                  Visibility="{Binding Path=IsKeyCommand, Converter={StaticResource BoolToVisConverter} }"></ComboBox>
                     </Grid>
                 </Grid>
 
