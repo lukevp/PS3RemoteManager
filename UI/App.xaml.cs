@@ -157,6 +157,12 @@ namespace PS3RemoteManager
             bw.DoWork += new DoWorkEventHandler(RemoteSleep.HibernateRemoteWorker);
             bw.ProgressChanged += new ProgressChangedEventHandler(RemoteSleep.HibernateRemoteWorkerProgressChanged);
 
+
+            using (StreamReader sr = new StreamReader("settings.json"))
+            {
+                SettingsVM = JsonConvert.DeserializeObject<SettingsModel>(sr.ReadToEnd());
+            }
+            /*
             try
             {
                 using (StreamReader sr = new StreamReader("settings.json"))
@@ -167,7 +173,7 @@ namespace PS3RemoteManager
             catch
             {
                 SettingsVM = new SettingsModel();
-            }
+            }*/
         }
 
         protected override void OnExit(ExitEventArgs e)

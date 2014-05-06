@@ -12,54 +12,60 @@ using WindowsInput.Native;
 namespace PS3RemoteManager
 {
 
-    public abstract class PS3Command
+    public class PS3Command
     {
-        public abstract void ButtonPress(App app, string buttonName);
-        public abstract string Description { get; }
+        // Use an enumerator to determine command type instead of subclasses because subclassing makes deserialization from JSON nasty
+        public enum Types { NULL, KEYBOARD, PROGRAM };
+        public Types Type;
         public string ButtonName { get; set; }
-    }
+        public string 
 
-    public class KeyboardCommand : PS3Command
-    {
+        /*keyboard commands */
         public VirtualKeyCode KeyCode;
         public int? KeyRepeat;
         public int InitialWait;
 
-        public KeyboardCommand(string buttonName, VirtualKeyCode code, int? keyRepeat = null, int initialWait = 500)
+
+        public PS3Command(string buttonName, VirtualKeyCode code, int? keyRepeat = null, int initialWait=500) // keyboard command
         {
+            this.Type = Types.KEYBOARD;
             this.ButtonName = buttonName;
             this.KeyCode = code;
             this.InitialWait = initialWait;
             this.KeyRepeat = keyRepeat;
         }
-        public override void ButtonPress(App app, string buttonName)
+
+        public PS3Command(string buttonName) // nothing specified so make a null type
         {
-            app.vKeyboard.Keyboard.KeyPress(this.KeyCode);
-        }
-        public override string Description
-        {
-            get
-            {
-                return String.Format("Key: {0}", this.KeyCode);
-            }
-        }
-    }
-    public class NullCommand : PS3Command
-    {
-        public NullCommand(string buttonName)
-        {
+            this.Type = Types.NULL;
             this.ButtonName = buttonName;
         }
 
-        public override void ButtonPress(App app, string buttonName)
+        public PS3Command(string buttonName, string programPath, string args)
+
+        public void ButtonPress(App app, string buttonName)
         {
-            app.Log.Write("Button Pressed with no Config Setting: " + buttonName);
+            if (this.Type == Types.KEYBOARD)
+            {
+                app.vKeyboard.Keyboard.KeyPress(this.KeyCode);
+            }
+            else if (this.Type == Types.NULL)
+            {
+                app.Log.Write("Button Pressed with no Config Setting: " + buttonName);
+            }
         }
-        public override string Description
+
+        public string Description
         {
-            get { return ""; }
+            get
+            {
+                if (this.Type == Types.KEYBOARD)
+                    return String.Format("Key: {0}", this.KeyCode);
+                return "";
+            }
         }
     }
+
 
     public class ProgramCommand : PS3Command
     {
@@ -95,6 +101,7 @@ namespace PS3RemoteManager
             }
         }
 
+        [JsonIgnore]
         public List<string> ValidButtons = new List<string>() { "Num_1", "Num_2", "Num_3", "Num_4", "Num_5", "Num_6", "Num_7", "Num_8", "Num_9", "Num_0", "Dash_Slash_Dash_Dash", "Return", "Clear", "Channel_Up", "Channel_Down", "Eject", "Top_Menu", "Time", "Prev", "Next", "Play", "Scan_Back", "Scan_Forward", "Stop", "Pause", "PopUp_Menu", "Step_Back", "Step_Forward", "Subtitle", "Audio", "Angle", "Display", "Instant_Forward", "Instant_Back", "Blue", "Red", "Green", "Yellow", "Playstation", "Enter", "L2", "R2", "L1", "R1", "Triangle", "Circle", "Cross", "Square", "Select", "L3", "R3", "Start", "Arrow_Up", "Arrow_Right", "Arrow_Down", "Arrow_Left" };
 
         public ObservableCollection<PS3Command> Commands { get; set; }
