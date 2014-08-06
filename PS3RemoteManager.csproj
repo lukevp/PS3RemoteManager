@@ -112,6 +112,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
+    <Compile Include="Models\Utils.cs" />
     <Compile Include="UI\App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
@@ -167,6 +168,7 @@
     <Content Include="Resources\Icon Connected.ico">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <Resource Include="ToDo.txt" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Resources\Icon Disconnected.ico">

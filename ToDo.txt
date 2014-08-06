@@ -1,0 +1,12 @@
+﻿
+- set remote searching to squelch immediately when doing a hibernate
+- update VM whenever drop down item is ch anged instead of just on selection change
+- anytime VM is changed, save to file
+- add support for the program commands.
+- refresh command type options whenever changing command
+- add automatic hibernating
+
+
+
+WOULD BE NICE
+- add ability to switch between json config files

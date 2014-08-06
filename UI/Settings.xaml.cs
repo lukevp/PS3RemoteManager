@@ -42,24 +42,6 @@ namespace PS3RemoteManager
             currentApp.bw.RunWorkerAsync();
         }
 
-        private void SaveSettings_Click(object sender, RoutedEventArgs e)
-        {
-            currentApp.Log.Write("Serializing settings to JSON file...");
-            try
-            {
-                using (StreamWriter sw = new StreamWriter("settings.json"))
-                {
-                    sw.Write(JsonConvert.SerializeObject(currentApp.SettingsVM));
-                }
-            }
-            catch
-            {
-                currentApp.Log.Write("Unable to serialize settings!");
-                return;
-            }
-            currentApp.Log.Write("Settings saved to settings.json!");
-        }
-
 
         private void logChanged()
         {
@@ -120,13 +102,13 @@ namespace PS3RemoteManager
 
             if (!string.IsNullOrEmpty(editingName))
             {
-                PS3Command newCommand = new NullCommand(editingName);
+                PS3Command newCommand = new PS3Command(editingName);
                 if (this.CommandType.SelectedIndex == 1)
                 {
                     // Keyboard Command
                     // TODO: change keyboard command to whatever the user chooses.
                     VirtualKeyCode enumVal = (VirtualKeyCode)Enum.Parse(typeof(VirtualKeyCode), KeyBinding.SelectedValue.ToString());
-                    newCommand = new KeyboardCommand(editingName, enumVal);
+                    newCommand = new PS3Command(editingName, enumVal);
                 }
                 currentApp.SettingsVM.ActiveConfig.UpdateCommand(newCommand);
                 editingName = null;
@@ -135,22 +117,22 @@ namespace PS3RemoteManager
             string name = (e.AddedItems[0] as PS3Command).ButtonName;
             editingName = name;
 
-            var CommandItem = selectedItem;
-            if (CommandItem is KeyboardCommand)
+            var CommandItem = selectedItem as PS3Command;
+            if (CommandItem.Type  == CmdType.KEYBOARD)
             {
                 this.CommandType.SelectedIndex = 1;
-                this.KeyBinding.SelectedValue = (CommandItem as KeyboardCommand).KeyCode;
+                this.KeyBinding.SelectedValue = CommandItem.KeyCode;
                 this.KeyLabel.Visibility = this.KeyBinding.Visibility = System.Windows.Visibility.Visible;
                 this.ProgramPath.Visibility = this.ProgramLabel.Visibility = System.Windows.Visibility.Hidden;
             }
-            else if (CommandItem is NullCommand)
+            else if (CommandItem.Type == CmdType.NULL)
             {
                 this.CommandType.SelectedIndex = 0;
                 this.KeyLabel.Visibility = this.KeyBinding.Visibility = System.Windows.Visibility.Hidden;
                 this.ProgramPath.Visibility = this.ProgramLabel.Visibility = System.Windows.Visibility.Hidden;
             }
 
-            else if (CommandItem is ProgramCommand)
+            else if (CommandItem.Type == CmdType.PROGRAM)
             {
                 this.CommandType.SelectedIndex = 2;
                 this.ProgramPath.Visibility = this.ProgramLabel.Visibility = System.Windows.Visibility.Visible;

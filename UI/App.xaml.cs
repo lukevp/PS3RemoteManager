@@ -63,7 +63,7 @@ namespace PS3RemoteManager
                 Log.Write(new LogMessage(String.Format("PS3 Bluetooth Remote Battery is currently at {0}%.", batteryLife), DebugLevel.BALLOON));
             }
         }
-        private KeyboardCommand heldButton = null;
+        private PS3Command heldButton = null;
         private string heldButtonName = null;
 
         private Icon iconDisconnected = new Icon("Resources/Icon Disconnected.ico");
@@ -88,14 +88,13 @@ namespace PS3RemoteManager
             if (command != null)
             {
                 command.ButtonPress(this, b.Name);
-                if (command is KeyboardCommand)
+                if (command.Type == CmdType.KEYBOARD)
                 {
-                    KeyboardCommand buttonCommand = command as KeyboardCommand;
-                    if (buttonCommand.KeyRepeat != null)
+                    if (command.KeyRepeat != null)
                     {
-                        heldButton = buttonCommand;
+                        heldButton = command;
                         heldButtonName = b.Name;
-                        timerRepeat.Interval = TimeSpan.FromMilliseconds(buttonCommand.InitialWait); // gated repeat - first repeat is minimum of 750 ms to prevent unnecessary repeats.
+                        timerRepeat.Interval = TimeSpan.FromMilliseconds(command.InitialWait); // gated repeat - first repeat is minimum of 750 ms to prevent unnecessary repeats.
                         timerRepeat.Start();
                     }
                 }
@@ -157,12 +156,12 @@ namespace PS3RemoteManager
             bw.DoWork += new DoWorkEventHandler(RemoteSleep.HibernateRemoteWorker);
             bw.ProgressChanged += new ProgressChangedEventHandler(RemoteSleep.HibernateRemoteWorkerProgressChanged);
 
-
+            /*
             using (StreamReader sr = new StreamReader("settings.json"))
             {
                 SettingsVM = JsonConvert.DeserializeObject<SettingsModel>(sr.ReadToEnd());
             }
-            /*
+            */
             try
             {
                 using (StreamReader sr = new StreamReader("settings.json"))
@@ -173,13 +172,15 @@ namespace PS3RemoteManager
             catch
             {
                 SettingsVM = new SettingsModel();
-            }*/
+            }
         }
 
         protected override void OnExit(ExitEventArgs e)
         {
             NotifyIcon.Dispose(); //the icon would clean up automatically, but this is cleaner
+            Utils.SaveSettings(this);
             base.OnExit(e);
         }
+
     }
 }
