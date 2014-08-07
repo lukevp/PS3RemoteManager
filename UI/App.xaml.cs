@@ -88,7 +88,7 @@ namespace PS3RemoteManager
             if (command != null)
             {
                 command.ButtonPress(this, b.Name);
-                if (command.Type == CmdType.KEYBOARD)
+                if (command.Type == CmdType.Keyboard)
                 {
                     if (command.KeyRepeat != null)
                     {

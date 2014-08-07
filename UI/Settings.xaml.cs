@@ -32,7 +32,6 @@ namespace PS3RemoteManager
             this.DataContext = currentApp;
             currentApp.Log.LogChanged = logChanged;
             InitializeComponent();
-            this.KeyBinding.ItemsSource = Enum.GetValues(typeof(VirtualKeyCode)).Cast<VirtualKeyCode>();
             
         }
 
@@ -92,10 +91,11 @@ namespace PS3RemoteManager
         }
 
 
-        private string editingName;
+        //private string editingName;
 
         private void ConfigurationGrid_SelectionChanged_1(object sender, SelectionChangedEventArgs e)
         {
+            /*
             if (e.AddedItems.Count == 0) { return; }
 
             var selectedItem = this.ConfigurationGrid.SelectedItem;
@@ -138,7 +138,7 @@ namespace PS3RemoteManager
                 this.ProgramPath.Visibility = this.ProgramLabel.Visibility = System.Windows.Visibility.Visible;
                 this.KeyLabel.Visibility = this.KeyBinding.Visibility = System.Windows.Visibility.Hidden;
             }
-
+            */
         }
     }
 

@@ -1,7 +1,35 @@
 ﻿<Window x:Class="PS3RemoteManager.Settings"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="PS3 Remote Manager" Height="675" Width="995" MinHeight="675" Closed="Window_Closed">
+        Title="PS3 Remote Manager" Height="675" Width="995" MinHeight="675" Closed="Window_Closed"
+        xmlns:sys="clr-namespace:System;assembly=mscorlib"
+        xmlns:local="clr-namespace:PS3RemoteManager"
+        xmlns:nativeinput="clr-namespace:WindowsInput.Native;assembly=WindowsInput"
+        
+        >
+
+    <Window.Resources>
+
+        <ObjectDataProvider x:Key="cmdTypeFromEnum"
+                            MethodName="GetValues" 
+                            ObjectType="{x:Type sys:Enum}">
+            <ObjectDataProvider.MethodParameters>
+                <x:Type TypeName="local:CmdType"/>
+            </ObjectDataProvider.MethodParameters>
+        </ObjectDataProvider>
+
+        <ObjectDataProvider x:Key="keyCodeFromEnum"
+                            MethodName="GetValues" 
+                            ObjectType="{x:Type sys:Enum}">
+            <ObjectDataProvider.MethodParameters>
+                <x:Type TypeName="nativeinput:VirtualKeyCode"/>
+            </ObjectDataProvider.MethodParameters>
+        </ObjectDataProvider>
+
+    </Window.Resources>
+
+
+
     <Grid>
         <Grid.Resources>
             <BooleanToVisibilityConverter x:Key="BoolToVisConverter" />
@@ -14,7 +42,7 @@
                         <ColumnDefinition Width="1*"></ColumnDefinition>
                         <ColumnDefinition Width="300px"></ColumnDefinition>
                     </Grid.ColumnDefinitions>
-                    <ListView  Name="ConfigurationGrid" Grid.Column="0" Height="Auto" Width="Auto" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" ItemsSource="{Binding SettingsVM.ActiveConfig.Commands}" SelectionChanged="ConfigurationGrid_SelectionChanged_1">
+                    <ListView  Name="ConfigurationGrid" Grid.Column="0" Height="Auto" Width="Auto" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" ItemsSource="{Binding SettingsVM.ActiveConfig.Commands}" SelectedItem="{Binding SettingsVM.ActiveCommand}" SelectionChanged="ConfigurationGrid_SelectionChanged_1">
                         <ListView.View>
                             <GridView>
                                 <GridViewColumn Header="Button Name" Width="150px" DisplayMemberBinding="{Binding ButtonName}"/>
@@ -38,19 +66,21 @@
                             <RowDefinition Height="30px"></RowDefinition>
                             <RowDefinition Height="50px"></RowDefinition>
                         </Grid.RowDefinitions>
+                        <!--<Label Grid.Row="0" Content="{Binding SettingsVM.ActiveCommand.ButtonName}"/>-->
                         <Label Grid.Row="0" Content="Command Type" HorizontalAlignment="Center" VerticalAlignment="Bottom"/>
-                        <ComboBox Name="CommandType" Grid.Row="1" HorizontalAlignment="Center" VerticalAlignment="Top" Width="175">
-                            <ComboBoxItem Content="None" IsSelected="True" />
-                            <ComboBoxItem Content="Keyboard" />
-                            <ComboBoxItem Content="Program" />
-                        </ComboBox>
+                        <ComboBox Name="CommandType" Grid.Row="1" HorizontalAlignment="Center" VerticalAlignment="Top" Width="175"
+                                  ItemsSource="{Binding Source={StaticResource cmdTypeFromEnum}}" SelectedItem="{Binding Path=SettingsVM.ActiveCommand.Type}" />
                         <!-- program items -->
-                        <Label Grid.Row="2" Content="Program Path" Name="ProgramLabel" HorizontalAlignment="Center" VerticalAlignment="Bottom"></Label>
-                        <TextBox Name="ProgramPath" Grid.Column="1" Grid.Row="3" Margin="10,0,10,20"></TextBox>
+                        <Label Grid.Row="2" Content="Program Path" Name="ProgramLabel" HorizontalAlignment="Center" VerticalAlignment="Bottom"
+                               Visibility="{Binding Path=SettingsVM.ActiveCommand.IsProgramCommand, Converter={StaticResource BoolToVisConverter} }"></Label>
+                        <TextBox Name="ProgramPath" Grid.Column="1" Grid.Row="3" Margin="10,0,10,20" Text="{Binding Path=SettingsVM.ActiveCommand.ProgramPath, Mode=TwoWay}"
+                        Visibility="{Binding Path=SettingsVM.ActiveCommand.IsProgramCommand, Converter={StaticResource BoolToVisConverter} }"/>
                         <!-- keyboard items -->
-                        <Label Name="KeyLabel" Content="Key Binding" HorizontalAlignment="Center" Grid.Row="4" VerticalAlignment="Bottom"/>
+                        <Label Name="KeyLabel" Content="Key Binding" HorizontalAlignment="Center" Grid.Row="4" VerticalAlignment="Bottom"
+                               Visibility="{Binding Path=SettingsVM.ActiveCommand.IsKeyCommand, Converter={StaticResource BoolToVisConverter} }"/>
                         <ComboBox Name="KeyBinding" Grid.Column="1" Grid.Row="5" Width="175px" Height="25px" VerticalAlignment="Top"
-                                  Visibility="{Binding Path=IsKeyCommand, Converter={StaticResource BoolToVisConverter} }"></ComboBox>
+                                  ItemsSource="{Binding Source={StaticResource keyCodeFromEnum}}"
+                                  Visibility="{Binding Path=SettingsVM.ActiveCommand.IsKeyCommand, Converter={StaticResource BoolToVisConverter} }" SelectedItem="{Binding Path=SettingsVM.ActiveCommand.KeyCode}"></ComboBox>
                     </Grid>
                 </Grid>
 

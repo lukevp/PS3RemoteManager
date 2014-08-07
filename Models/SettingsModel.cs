@@ -17,6 +17,7 @@ namespace PS3RemoteManager
         private ButtonConfigModel _activeConfig = new ButtonConfigModel();
         public ButtonConfigModel ActiveConfig { get { return _activeConfig; } set { _activeConfig = value; } }
 
+        public PS3Command ActiveCommand { get; set; }
         public SettingsModel()
         {
             StartWithWindows = false;

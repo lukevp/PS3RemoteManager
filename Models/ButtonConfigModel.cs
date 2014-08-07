@@ -11,25 +11,75 @@ using WindowsInput.Native;
 
 namespace PS3RemoteManager
 {
-    public enum CmdType { NULL, KEYBOARD, PROGRAM };
+    public enum CmdType { None, Keyboard, Program };
 
-    public class PS3Command
+    public class PS3Command : INotifyPropertyChanged
     {
-        // Use an enumerator to determine command type instead of subclasses because subclassing makes deserialization from JSON nasty
+        
+        public event PropertyChangedEventHandler PropertyChanged;
 
-        public CmdType Type;
+        protected void OnPropertyChanged(string name)
+        {
+            PropertyChangedEventHandler handler = PropertyChanged;
+            if (handler != null)
+            {
+                handler(this, new PropertyChangedEventArgs(name));
+            }
+        }
         public string ButtonName { get; set; }
         //public string 
+        // TODO: maybe check the CmdType enumerator instead of checking this.
+        public bool IsKeyCommand
+        {
+            get
+            { return Type == CmdType.Keyboard; }
+        } 
+        public bool IsProgramCommand
+        {
+            get
+            { return Type == CmdType.Program; }
+        }
+
+        private CmdType _type;
+        public CmdType Type
+        {
+            get
+            {
+                return _type;
+            }
+            set
+            {
+                _type = value;
+                OnPropertyChanged("Type");
+                OnPropertyChanged("Description");
+                OnPropertyChanged("IsKeyCommand");
+                OnPropertyChanged("IsProgramCommand");
+            }
+        }
+        
 
         /*keyboard commands */
-        public VirtualKeyCode KeyCode;
+        private VirtualKeyCode _keyCode;
+        public VirtualKeyCode KeyCode { 
+            get
+            {
+                return _keyCode;
+            }
+            set
+            {
+                _keyCode = value;
+                OnPropertyChanged("KeyCode");
+                OnPropertyChanged("Description");
+            }
+        }
         public int? KeyRepeat;
         public int InitialWait;
 
+        public string ProgramPath { get; set; }
 
         public PS3Command(string buttonName, VirtualKeyCode code, int? keyRepeat = null, int initialWait=500) // keyboard command
         {
-            this.Type = CmdType.KEYBOARD;
+            this.Type = CmdType.Keyboard;
             this.ButtonName = buttonName;
             this.KeyCode = code;
             this.InitialWait = initialWait;
@@ -38,7 +88,7 @@ namespace PS3RemoteManager
 
         public PS3Command(string buttonName) // nothing specified so make a null type
         {
-            this.Type = CmdType.NULL;
+            this.Type = CmdType.None;
             this.ButtonName = buttonName;
         }
 
@@ -46,11 +96,11 @@ namespace PS3RemoteManager
 
         public void ButtonPress(App app, string buttonName)
         {
-            if (this.Type == CmdType.KEYBOARD)
+            if (this.Type == CmdType.Keyboard)
             {
                 app.vKeyboard.Keyboard.KeyPress(this.KeyCode);
             }
-            else if (this.Type == CmdType.NULL)
+            else if (this.Type == CmdType.None)
             {
                 app.Log.Write("Button Pressed with no Config Setting: " + buttonName);
             }
@@ -60,7 +110,7 @@ namespace PS3RemoteManager
         {
             get
             {
-                if (this.Type == CmdType.KEYBOARD)
+                if (this.Type == CmdType.Keyboard)
                     return String.Format("Key: {0}", this.KeyCode);
                 return "";
             }
@@ -88,19 +138,8 @@ namespace PS3RemoteManager
     }*/
 
 
-    public class ButtonConfigModel : INotifyPropertyChanged
+    public class ButtonConfigModel
     {
-        
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        protected void OnPropertyChanged(string name)
-        {
-            PropertyChangedEventHandler handler = PropertyChanged;
-            if (handler != null)
-            {
-                handler(this, new PropertyChangedEventArgs(name));
-            }
-        }
 
         [JsonIgnore]
         public List<string> ValidButtons = new List<string>() { "Num_1", "Num_2", "Num_3", "Num_4", "Num_5", "Num_6", "Num_7", "Num_8", "Num_9", "Num_0", "Dash_Slash_Dash_Dash", "Return", "Clear", "Channel_Up", "Channel_Down", "Eject", "Top_Menu", "Time", "Prev", "Next", "Play", "Scan_Back", "Scan_Forward", "Stop", "Pause", "PopUp_Menu", "Step_Back", "Step_Forward", "Subtitle", "Audio", "Angle", "Display", "Instant_Forward", "Instant_Back", "Blue", "Red", "Green", "Yellow", "Playstation", "Enter", "L2", "R2", "L1", "R1", "Triangle", "Circle", "Cross", "Square", "Select", "L3", "R3", "Start", "Arrow_Up", "Arrow_Right", "Arrow_Down", "Arrow_Left" };
